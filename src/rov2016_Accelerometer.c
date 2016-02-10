@@ -20,7 +20,6 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t accelerometer_receive_buffer[6];
-static uint8_t aks_bufferteller = 0;
 
 /* Funksjonsprototyper */
 
@@ -58,7 +57,7 @@ extern void accelerometer_init(void){
  * @param
  * @retval
  */
-extern void accelerometer_readValue(void){
+extern void accelerometer_updateValue(void){
 	LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, accelerometer_receive_buffer, 6);
 	accelerometer_data[0] = accelerometer_receive_buffer[0] >> 4;
 	accelerometer_data[1] = accelerometer_receive_buffer[1];

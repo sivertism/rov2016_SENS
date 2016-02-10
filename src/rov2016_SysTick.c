@@ -29,7 +29,7 @@ void USART_transmit(uint8_t data);
 uint8_t CAN_getRxMessages(void);
 uint8_t CAN_getByteFromMessage(uint8_t filter_number, uint8_t byte_number);
 void CAN_transmitByte(uint16_t StdId, uint8_t data);
-void accelerometer_readValue(void);
+void accelerometer_updateValue(void);
 int16_t accelerometer_getData(uint8_t axis);
 void CAN_transmit_AN_RAW(void);
 
