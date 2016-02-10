@@ -3,8 +3,8 @@
   * @file    TIM_metoder.c
   * @author  Sivert Sliper, Stian Soerensen
   * @version V1.0
-  * @date    3-February-2016
-  * @brief   This file contains all the functions for the TIM peripheral.
+  * @date    10-February-2016
+  * @brief   This file contains all functions used for the TIM peripheral.
   **************************************************************************************
   */
 
@@ -13,26 +13,24 @@
 #include <stm32f30x_rcc.h>
 #include <stm32f30x_gpio.h>
 #include <stm32f30x_tim.h>
+#include "rov2016_TIM.h"
 
 /* Global variables --------------------------------------------------------------------*/
 
 /* Local variables ---------------------------------------------------------------------*/
-#include "rov2016_TIM.h"
 
-/* Function declarations ---------------------------------------------------------------*/
-void TIM4_init(void);
-void TIM4_enable(void);
-void TIM4_disable(void);
-void TIM2_init(void);
+/* Private function declarations -------------------------------------------------------*/
+
 
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
- * @brief  	Initialize TIM4 as a clock signal for analog filter IC
+ * @brief  	Initialize TIM4 as a 1 kHz clock signal for the analog filter IC.
+ * 			This sets the cut-off frequency throught the filter to
+ * 			1000/100 = 10 Hz.
  * @param  	None
  * @retval 	None
  */
-
 void TIM4_init(void){
 	TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 	TIM_OCInitTypeDef TIM_OCInitStructure;
@@ -91,21 +89,3 @@ void TIM2_init(void){
 	TIM_SelectOutputTrigger(TIM2, TIM_TRGOSource_Update);
 	TIM_Cmd(TIM2, ENABLE);
 }// end TIM2_init()
-
-/**
- * @brief  	Deactivate TIM4
- * @param  	None
- * @retval 	None
- */
-void TIM4_disable(){
-	TIM_Cmd(TIM4, DISABLE);
-} // end TIM4_disable()
-
-/**
- * @brief  	Activate TIM4
- * @param  	None
- * @retval 	None
- */
-void TIM4_enable(){
-	TIM_Cmd(TIM4, ENABLE);
-} // end TIM4_enable()
