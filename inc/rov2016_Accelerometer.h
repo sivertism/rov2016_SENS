@@ -12,6 +12,9 @@
 #define ACCELEROMETER_X_AXIS							0
 #define ACCELEROMETER_Y_AXIS							1
 #define ACCELEROMETER_Z_AXIS							2
+#define MAGNETOMETER_X_AXIS								0
+#define MAGNETOMETER_Y_AXIS								1
+#define MAGNETOMETER_Z_AXIS								2
 
 /* Extern variables --------------------------------------------------------------------*/
 

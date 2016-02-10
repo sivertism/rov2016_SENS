@@ -56,7 +56,7 @@ extern void accelerometer_init(void){
  * 				- Samples magneticc field at a frequency of 100 Hz.
  * 				- Measures magnetic field strength in all 3 axes.
  * 				- +/- 1.9 Ga full scale range.
- * 				- 12 bit resolution, i.e. 1mg.
+ * 				- 12 bit resolution, i.e. 463867.2 G/LSb.
  * 			Axes:
  * 				- x points from the usb-ports towards the LED's.
  * 				- y points from the USER-button towards the RESET-button.
@@ -115,5 +115,18 @@ extern int16_t accelerometer_getData(uint8_t axis){
 	if(axis == 0) temp   = (accelerometer_receive_buffer[1] << 8) | accelerometer_receive_buffer[0];
 	else if(axis == 1) temp   = (accelerometer_receive_buffer[3] << 8) | accelerometer_receive_buffer[2];
 	else if(axis == 2) temp   = (accelerometer_receive_buffer[5] << 8) | accelerometer_receive_buffer[4];
+	return ((int16_t)(temp)) >> 4;
+}
+
+/**
+ * @brief  Returns the magnetometer data for the selected axis.
+ * @param  uint8_t axis - The wanted axis, X=0, Y=1, Z=2
+ * @retval The magnetometer data for the selected axis (int16_t) in 463867.2 G/LSb.
+ */
+extern int16_t magnetometer_getData(uint8_t axis){
+	uint16_t temp;
+	if(axis == 0) temp   = (magnetometer_receive_buffer[1] << 8) | magnetometer_receive_buffer[0];
+	else if(axis == 1) temp   = (magnetometer_receive_buffer[3] << 8) | magnetometer_receive_buffer[2];
+	else if(axis == 2) temp   = (magnetometer_receive_buffer[5] << 8) | magnetometer_receive_buffer[4];
 	return ((int16_t)(temp)) >> 4;
 }
