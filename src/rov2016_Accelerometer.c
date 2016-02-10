@@ -50,6 +50,14 @@ extern void accelerometer_init(void){
 	LSM303DLHC_AccInit(&aks_init);
 } // end accelerometer_init()
 
+extern void magnetometer_init(void){
+	LSM303DLHCMag_InitTypeDef magInit;
+	magInit.MagFull_Scale = LSM303DLHC_M_SENSITIVITY_XY_1_9Ga;
+	magInit.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
+	magInit.MagOutput_DataRate = LSM303DLHC_ODR_100_HZ;
+	LSM303DLHC_MagInit(&magInit);
+
+}
 
 /**
  * @brief   Reads the acceleration in 3 axes from the accelerometer and stores the values
