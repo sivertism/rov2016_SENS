@@ -8,7 +8,7 @@
 #include "stm32f30x.h"
 #include "rov2016_Accelerometer.h"
 #include "rov2016_canbus.h"
-#include "rov2016_canbus.h"
+#include "rov2016_UART.h"
 /* Funtion Prototypes --------------------------------------------------------*/
 void init(void);
 void CAN_Config(void);

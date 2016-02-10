@@ -18,6 +18,7 @@
 #include "rov2016_Accelerometer.h"
 #include "rov2016_canbus.h"
 #include "rov2016_ADC.h"
+#include "rov2016_UART.h"
 
 /* Global variables -------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
@@ -25,12 +26,6 @@
 /* Function declarations ---------------------------------------------------------------*/
 void SysTick_init(void);
 void SysTick_Handler(void);
-
-uint8_t USART_getRxMessage(void);
-uint8_t USART_getNewBytes(void);
-void USART_transmit(uint8_t data);
-void USART_timestamp_transmit(uint8_t timestamp);
-void USART_datalog_transmit(uint8_t header, uint16_t data);
 
 /* Function definitions ----------------------------------------------------------------*/
 
