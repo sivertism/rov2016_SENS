@@ -14,3 +14,4 @@ extern const uint8_t STATUS_LED6;
 extern const uint8_t STATUS_LED7;
 
 extern uint8_t accelerometer_data[6];
+extern uint8_t magnetometer_data[6];
