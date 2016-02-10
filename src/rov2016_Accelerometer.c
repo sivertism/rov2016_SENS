@@ -82,12 +82,12 @@ extern void magnetometer_init(void){
  */
 extern void accelerometer_updateValue(void){
 	LSM303DLHC_Read(ACC_I2C_ADDRESS, LSM303DLHC_OUT_X_L_A, accelerometer_receive_buffer, 6);
-	accelerometer_data[0] = accelerometer_receive_buffer[0] >> 4;
-	accelerometer_data[1] = accelerometer_receive_buffer[1];
-	accelerometer_data[2] = accelerometer_receive_buffer[2] >> 4;
-	accelerometer_data[3] = accelerometer_receive_buffer[3];
-	accelerometer_data[4] = accelerometer_receive_buffer[4] >> 4;
-	accelerometer_data[5] = accelerometer_receive_buffer[5];
+//	accelerometer_data[0] = accelerometer_receive_buffer[0] >> 4;
+//	accelerometer_data[1] = accelerometer_receive_buffer[1];
+//	accelerometer_data[2] = accelerometer_receive_buffer[2] >> 4;
+//	accelerometer_data[3] = accelerometer_receive_buffer[3];
+//	accelerometer_data[4] = accelerometer_receive_buffer[4] >> 4;
+//	accelerometer_data[5] = accelerometer_receive_buffer[5];
 	new_values |= 0b000111;// indicate new accelerometer values.
 } // End accelerometer_updateValue(void)
 
@@ -99,12 +99,12 @@ extern void accelerometer_updateValue(void){
  */
 extern void magnetometer_updateValue(void){
 	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M, magnetometer_receive_buffer, 6);
-	magnetometer_data[0] = magnetometer_receive_buffer[0] >> 4;
-	magnetometer_data[1] = magnetometer_receive_buffer[1];
-	magnetometer_data[2] = magnetometer_receive_buffer[2] >> 4;
-	magnetometer_data[3] = magnetometer_receive_buffer[3];
-	magnetometer_data[4] = magnetometer_receive_buffer[4] >> 4;
-	magnetometer_data[5] = magnetometer_receive_buffer[5];
+//	magnetometer_data[0] = magnetometer_receive_buffer[0] >> 4;
+//	magnetometer_data[1] = magnetometer_receive_buffer[1];
+//	magnetometer_data[2] = magnetometer_receive_buffer[2] >> 4;
+//	magnetometer_data[3] = magnetometer_receive_buffer[3];
+//	magnetometer_data[4] = magnetometer_receive_buffer[4] >> 4;
+//	magnetometer_data[5] = magnetometer_receive_buffer[5];
 	new_values |= 0b111000; // indicate new magnetometer values.
 } // End magnetometer_updateValue()
 

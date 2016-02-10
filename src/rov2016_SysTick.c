@@ -74,18 +74,18 @@ void SysTick_Handler(void){
 		/* 'G' - A_X, 'H' - MAG_X, 'I' - MAG_Y
 		 * 'J' - MAG_Z, 'K' - Int_temp, 'L' - leak_det
 		 */
-		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
-		USART_datalog_transmit('H', magnetometer_getData(MAGNETOMETER_X_AXIS));
-		USART_datalog_transmit('I', magnetometer_getData(MAGNETOMETER_Y_AXIS));
-		USART_datalog_transmit('J', magnetometer_getData(MAGNETOMETER_Z_AXIS));
 		USART_timestamp_transmit(timeStamp++);
-
+		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
+		USART_datalog_transmit('X', magnetometer_getData(MAGNETOMETER_X_AXIS));
+		USART_datalog_transmit('Y', magnetometer_getData(MAGNETOMETER_Y_AXIS));
+		USART_datalog_transmit('Z', magnetometer_getData(MAGNETOMETER_Z_AXIS));
 	} // end if
 
 	if(teller>100){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 
-//		accelerometer_readValue();
+		accelerometer_updateValue();
+		magnetometer_updateValue();
 
 		teller = 0;
 //		CAN_transmitAcceleration(&accelerometer_data);
