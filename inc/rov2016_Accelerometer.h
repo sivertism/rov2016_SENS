@@ -16,6 +16,13 @@
 #define MAGNETOMETER_Y_AXIS								1
 #define MAGNETOMETER_Z_AXIS								2
 
+#define ACC_NEW_VALUE_X									0b0000001
+#define ACC_NEW_VALUE_Y									0b0000010
+#define ACC_NEW_VALUE_Z									0b0000100
+#define MAG_NEW_VALUE_X									0b0001000
+#define MAG_NEW_VALUE_Y									0b0010000
+#define MAG_NEW_VALUE_Z									0b0100000
+
 /* Extern variables --------------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------------------*/
@@ -26,3 +33,4 @@ extern void magnetometer_init(void);
 /* Utility */
 extern void accelerometer_updateValue(void);
 extern int16_t accelerometer_getData(uint8_t axis);
+extern uint8_t lsm303dlhc_getValues(void);

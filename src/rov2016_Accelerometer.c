@@ -21,6 +21,7 @@
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t accelerometer_receive_buffer[6];
 static uint8_t magnetometer_receive_buffer[6];
+static uint8_t new_values = 0;
 
 /* Funksjonsprototyper */
 
@@ -87,6 +88,7 @@ extern void accelerometer_updateValue(void){
 	accelerometer_data[3] = accelerometer_receive_buffer[3];
 	accelerometer_data[4] = accelerometer_receive_buffer[4] >> 4;
 	accelerometer_data[5] = accelerometer_receive_buffer[5];
+	new_values |= 0b000111;// indicate new accelerometer values.
 } // End accelerometer_updateValue(void)
 
 /**
@@ -103,6 +105,7 @@ extern void magnetometer_updateValue(void){
 	magnetometer_data[3] = magnetometer_receive_buffer[3];
 	magnetometer_data[4] = magnetometer_receive_buffer[4] >> 4;
 	magnetometer_data[5] = magnetometer_receive_buffer[5];
+	new_values |= 0b111000; // indicate new magnetometer values.
 } // End magnetometer_updateValue()
 
 /**
@@ -111,10 +114,19 @@ extern void magnetometer_updateValue(void){
  * @retval The acceleration data for the selected axis (int16_t) in 1mg/LSb.
  */
 extern int16_t accelerometer_getData(uint8_t axis){
-	uint16_t temp;
-	if(axis == 0) temp   = (accelerometer_receive_buffer[1] << 8) | accelerometer_receive_buffer[0];
-	else if(axis == 1) temp   = (accelerometer_receive_buffer[3] << 8) | accelerometer_receive_buffer[2];
-	else if(axis == 2) temp   = (accelerometer_receive_buffer[5] << 8) | accelerometer_receive_buffer[4];
+	uint16_t temp = 0;
+	if(axis == 0){
+		temp   = (accelerometer_receive_buffer[1] << 8) | accelerometer_receive_buffer[0];
+		new_values &= ~(ACCELEROMETER_X_AXIS);
+	}
+	else if(axis == 1){
+		temp   = (accelerometer_receive_buffer[3] << 8) | accelerometer_receive_buffer[2];
+		new_values &= ~(ACCELEROMETER_Y_AXIS);
+}
+	else if(axis == 2){
+		temp   = (accelerometer_receive_buffer[5] << 8) | accelerometer_receive_buffer[4];
+		new_values &= ~(ACCELEROMETER_Z_AXIS);
+}
 	return ((int16_t)(temp)) >> 4;
 }
 
@@ -124,9 +136,30 @@ extern int16_t accelerometer_getData(uint8_t axis){
  * @retval The magnetometer data for the selected axis (int16_t) in 463867.2 G/LSb.
  */
 extern int16_t magnetometer_getData(uint8_t axis){
-	uint16_t temp;
-	if(axis == 0) temp   = (magnetometer_receive_buffer[1] << 8) | magnetometer_receive_buffer[0];
-	else if(axis == 1) temp   = (magnetometer_receive_buffer[3] << 8) | magnetometer_receive_buffer[2];
-	else if(axis == 2) temp   = (magnetometer_receive_buffer[5] << 8) | magnetometer_receive_buffer[4];
+	uint16_t temp = 0;
+	if(axis == 0){
+		temp   = (magnetometer_receive_buffer[1] << 8) | magnetometer_receive_buffer[0];
+		new_values &= ~(MAGNETOMETER_X_AXIS);
+	}
+	else if(axis == 1){
+		temp   = (magnetometer_receive_buffer[3] << 8) | magnetometer_receive_buffer[2];
+		new_values &= ~(MAGNETOMETER_Y_AXIS);
+	}
+	else if(axis == 2){
+		temp   = (magnetometer_receive_buffer[5] << 8) | magnetometer_receive_buffer[4];
+		new_values &= ~(MAGNETOMETER_Z_AXIS);
+	}
 	return ((int16_t)(temp)) >> 4;
 }
+
+
+/**
+ * @brief   Returns a variable indicating unread accelerometer/magnetometer values.
+ * @param
+ * @retval	A byte indication unread values.
+ * 			0b111xxx indicates new magnetometer values in all 3 axes.
+ * 			0bxxx111 indicates new accelerometer values in all 3 axes.
+ */
+extern uint8_t lsm303dlhc_getValues(void){
+	return new_values;
+} // end lsm303dlhc_getValues

@@ -15,6 +15,9 @@
 #include "stm32f30x_gpio.h"
 #include "core_cm4.h"
 #include "stm32f30x_dma.h"
+#include "rov2016_Accelerometer.h"
+#include "rov2016_canbus.h"
+#include "rov2016_ADC.h"
 /* Global variables -------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
 
@@ -26,17 +29,8 @@ void SysTick_Handler(void);
 uint8_t USART_getRxMessage(void);
 uint8_t USART_getNewBytes(void);
 void USART_transmit(uint8_t data);
-uint8_t CAN_getRxMessages(void);
-uint8_t CAN_getByteFromMessage(uint8_t filter_number, uint8_t byte_number);
-void CAN_transmitByte(uint16_t StdId, uint8_t data);
-void accelerometer_updateValue(void);
-int16_t accelerometer_getData(uint8_t axis);
-void CAN_transmit_AN_RAW(void);
-
 void USART_timestamp_transmit(uint8_t timestamp);
 void USART_datalog_transmit(uint8_t header, uint16_t data);
-uint8_t ADC_getValues(void);
-uint16_t ADC_getChannel(uint8_t channel);
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
@@ -47,7 +41,7 @@ uint16_t ADC_getChannel(uint8_t channel);
 void SysTick_init(void) {
 	NVIC_SetPriority(SysTick_IRQn, 1);
 	SysTick->CTRL = 0; /* Disable SysTick */
-	SysTick->LOAD = 72000000/200;  // 10 msek avbruddsintervall.
+	SysTick->LOAD = 72000000/100;  // 10 msek avbruddsintervall.
 	SysTick->VAL = 0;
 	SysTick->CTRL = (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk
 			| SysTick_CTRL_CLKSOURCE_Msk);
