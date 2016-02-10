@@ -9,17 +9,13 @@
 #include "rov2016_Accelerometer.h"
 #include "rov2016_canbus.h"
 #include "rov2016_UART.h"
+#include "rov2016_Gyroscope.h"
+#include "rov2016_TIM.h"
+#include "rov2016_ADC.h"
+#include "rov2016_SysTick.h"
 /* Funtion Prototypes --------------------------------------------------------*/
 void init(void);
-void CAN_Config(void);
 void GPIO_init(void);
-void SysTick_init(void);
-void USART_init();
-void accelerometer_init(void);
-void TIM4_init(void);
-void TIM2_init(void);
-void ADC_init();
-
 
 /* Funtion Definitions -------------------------------------------------------*/
 
@@ -30,6 +26,7 @@ void init(void){
 	SysTick_init();
 	accelerometer_init();
 	magnetometer_init();
+	gyroscope_init();
 	ADC_init();
 	TIM4_init();
 	TIM2_init();
