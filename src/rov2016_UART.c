@@ -32,16 +32,18 @@
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
 
+/* Local variables ---------------------------------------------------------------------*/
 
-/* Function prototypes -----------------------------------------------------------------*/
-void USART_init(void);
-void USART_transmit(uint8_t data);
-void USART2_IRQHandler(void);
-void USART_timestamp_transmit(uint8_t timestamp);
-void USART_datalog_transmit(uint8_t header, uint16_t data);
+/* Receive buffer */
+static uint8_t rx_buffer[RX_BUFFER_SIZE] = {0};
+static uint8_t rx_buffer_write_counter = 0;
+static uint8_t rx_buffer_read_counter = 0;
+static uint8_t new_bytes = 0;
+static uint8_t hex2ascii_table[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
+
+/* Private function prototypes ---------------------------------------------------------*/
 
 /* Function definitions ----------------------------------------------------------------*/
-
 
 /**
  * @brief  	Receives message from FT232 USB to serial converter. Received messages are
@@ -49,7 +51,7 @@ void USART_datalog_transmit(uint8_t header, uint16_t data);
  * @param  None
  * @retval None
  */
-void USART2_IRQHandler(void){
+extern void USART2_IRQHandler(void){
 
 	/* Toggle status LED*/
 	GPIOE->ODR ^= UART_RX_LED << 8;
@@ -73,7 +75,7 @@ void USART2_IRQHandler(void){
  * @param  None
  * @retval None
  */
-void USART_init(void){
+extern void USART_init(void){
 	USART_InitTypeDef USART_InitStructure;
 	USART_ClockInitTypeDef  USART_ClockInitStructure;
 	NVIC_InitTypeDef NVIC_InitStruct_USART;
@@ -132,7 +134,7 @@ void USART_init(void){
  * @param  One byte to be transmitted.
  * @retval None
  */
-void USART_transmit(uint8_t data){
+extern void USART_transmit(uint8_t data){
 
 	/* Toggle status LED*/
 	GPIOE->ODR ^= UART_TX_LED << 8;
@@ -154,7 +156,7 @@ void USART_transmit(uint8_t data){
  * @param	data:	A 16-bit value to be transmitted.
  * @retval None
  */
-void USART_datalog_transmit(uint8_t header, uint16_t data){
+extern void USART_datalog_transmit(uint8_t header, uint16_t data){
 	/*	1. Transmit header
 	 * 	2. Convert and transmit each hex digit of the data coded in ascii.
 	 * 	3. Transmit timestamp header
@@ -177,7 +179,7 @@ void USART_datalog_transmit(uint8_t header, uint16_t data){
  * @retval None
  */
 
-void USART_timestamp_transmit(uint8_t timestamp){
+extern void USART_timestamp_transmit(uint8_t timestamp){
 	USART_transmit('T');
 	USART_transmit((uint8_t)(hex2ascii_table[(timestamp >> 4 & 0x000F)])); // 	(bit 4-7)
 	USART_transmit((uint8_t)(hex2ascii_table[(timestamp & 0x000F)])); // 		(bit 0-3)
@@ -188,7 +190,7 @@ void USART_timestamp_transmit(uint8_t timestamp){
  * @param  None
  * @retval The number of unread bytes in the emulated UART receive FIFO.
  */
-uint8_t USART_getNewBytes(void){
+extern uint8_t USART_getNewBytes(void){
 	return new_bytes;
 }
 
@@ -197,7 +199,7 @@ uint8_t USART_getNewBytes(void){
  * @param  None
  * @retval The number of unread bytes in the emulated UART receive FIFO.
  */
-uint8_t USART_getRxMessage(void){
+extern uint8_t USART_getRxMessage(void){
 	if (rx_buffer_read_counter >= RX_BUFFER_SIZE){
 		rx_buffer_read_counter = 0;
 	}

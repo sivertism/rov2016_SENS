@@ -9,12 +9,10 @@
 /* Private macros ----------------------------------------------------------------------*/
 #define RX_BUFFER_SIZE						10
 
-/* Private variables -------------------------------------------------------------------*/
+/* External function prototypes  -------------------------------------------------------*/
+extern void USART_init(void);
+extern void USART_transmit(uint8_t data);
+extern void USART2_IRQHandler(void);
+extern void USART_timestamp_transmit(uint8_t timestamp);
+extern void USART_datalog_transmit(uint8_t header, uint16_t data);
 
-/* Receive buffer */
-uint8_t rx_buffer[RX_BUFFER_SIZE] = {0};
-uint8_t rx_buffer_write_counter = 0;
-uint8_t rx_buffer_read_counter = 0;
-uint8_t new_bytes = 0;
-
-uint8_t hex2ascii_table[16] = {'0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'};
