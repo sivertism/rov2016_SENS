@@ -69,15 +69,15 @@ void SysTick_Handler(void){
 		GPIOE->ODR ^= (1u << CAN_getByteFromMessage(2,0)) << 8;
 	} // end if
 
-	if(ADC_getValues() == 0x3F){
+	if(lsm303dlhc_getValues() == LSM303DLHC_ALL_VALUES){
 		if(timeStamp>=255) timeStamp = 0;
-		/* 'G' - AN_IN_1, 'H' - AN_IN_2, 'I' - CUR_IN_1
-		 * 'J' - CUR_IN_2, 'K' - Int_temp, 'L' - leak_det
+		/* 'G' - A_X, 'H' - MAG_X, 'I' - MAG_Y
+		 * 'J' - MAG_Z, 'K' - Int_temp, 'L' - leak_det
 		 */
-		USART_datalog_transmit('G', ADC_getChannel(5));
-		USART_datalog_transmit('H', ADC_getChannel(2));
-		USART_datalog_transmit('I', ADC_getChannel(3));
-		USART_datalog_transmit('J', ADC_getChannel(4));
+		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
+		USART_datalog_transmit('H', magnetometer_getData(MAGNETOMETER_X_AXIS));
+		USART_datalog_transmit('I', magnetometer_getData(MAGNETOMETER_Y_AXIS));
+		USART_datalog_transmit('J', magnetometer_getData(MAGNETOMETER_Z_AXIS));
 		USART_timestamp_transmit(timeStamp++);
 
 	} // end if
