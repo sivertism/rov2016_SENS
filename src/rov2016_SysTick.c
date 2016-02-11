@@ -70,9 +70,9 @@ void SysTick_Handler(void){
 		if(timeStamp>=255) timeStamp = 0;
 		USART_timestamp_transmit(timeStamp++);
 		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
-		USART_datalog_transmit('X', gyroscope_getData(GYRO_X_AXIS));
-		USART_datalog_transmit('Y', gyroscope_getData(GYRO_Y_AXIS));
-		USART_datalog_transmit('Z', gyroscope_getData(GYRO_Z_AXIS));
+		USART_datalog_transmit('X', gyroscope_getDPS(GYRO_X_AXIS));
+		USART_datalog_transmit('Y', gyroscope_getDPS(GYRO_Y_AXIS));
+		USART_datalog_transmit('Z', gyroscope_getDPS(GYRO_Z_AXIS));
 	} // end if
 
 	if(teller>100){

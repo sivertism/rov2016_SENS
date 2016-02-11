@@ -22,5 +22,6 @@
 extern void gyroscope_init(void);
 /* Utility */
 extern void gyroscope_updateValue(void);
-extern int16_t gyroscope_getData(uint8_t axis);
+extern int16_t gyroscope_getDPS(uint8_t axis);
+extern float gyroscope_getRPS(uint8_t axis);
 extern uint8_t gyroscope_getValues(void);

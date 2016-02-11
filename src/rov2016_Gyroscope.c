@@ -72,13 +72,23 @@ extern uint8_t gyroscope_getValues(void){
 }
 
 /**
- * @brief	Returns gyro-values from private buffer.
+ * @brief	Returns gyro-values from private buffer in degrees per second.
  * @param	Axis, can be a value of GYRO_AXIS_x.
  * @retval	int16_t angular velocity in 8.75 mdps/LSb.
  */
-extern int16_t gyroscope_getData(uint8_t axis){
-	int16_t temp;
-	temp = (receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2];
+extern int16_t gyroscope_getDPS(uint8_t axis){
 	new_values = 0;
-	return temp;
+	return (receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2];
+}
+
+/**
+ * @brief	Returns gyro-values from private buffer in radians per second.
+ * @param	Axis, can be a value of GYRO_AXIS_x.
+ * @retval	float angular velocity in 1 rps/LSb.
+ */
+extern float gyroscope_getRPS(uint8_t axis){
+	/* Convert from degrees per second to radians per second */
+	float rps = (float)((receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2])*0.0001527163095;
+	new_values = 0;
+	return rps;
 }
