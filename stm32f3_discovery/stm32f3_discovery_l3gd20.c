@@ -444,7 +444,7 @@ static uint8_t L3GD20_SendByte(uint8_t byte)
   L3GD20Timeout = L3GD20_FLAG_TIMEOUT;
   while (SPI_I2S_GetFlagStatus(L3GD20_SPI, SPI_I2S_FLAG_TXE) == RESET)
   {
-    if((L3GD20Timeout--) == 0) return L3GD20_TIMEOUT_UserCallback();
+    //if((L3GD20Timeout--) == 0) return L3GD20_TIMEOUT_UserCallback();
   }
   
   /* Send a Byte through the SPI peripheral */
@@ -454,7 +454,7 @@ static uint8_t L3GD20_SendByte(uint8_t byte)
   L3GD20Timeout = L3GD20_FLAG_TIMEOUT;
   while (SPI_I2S_GetFlagStatus(L3GD20_SPI, SPI_I2S_FLAG_RXNE) == RESET)
   {
-    if((L3GD20Timeout--) == 0) return L3GD20_TIMEOUT_UserCallback();
+    //if((L3GD20Timeout--) == 0) return L3GD20_TIMEOUT_UserCallback();
   }
   
   /* Return the Byte read from the SPI bus */

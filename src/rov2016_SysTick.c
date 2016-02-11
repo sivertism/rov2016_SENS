@@ -19,6 +19,7 @@
 #include "rov2016_canbus.h"
 #include "rov2016_ADC.h"
 #include "rov2016_UART.h"
+#include "rov2016_Gyroscope.h"
 
 /* Global variables -------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
@@ -65,16 +66,13 @@ void SysTick_Handler(void){
 		GPIOE->ODR ^= (1u << CAN_getByteFromMessage(2,0)) << 8;
 	} // end if
 
-	if(lsm303dlhc_getValues() == LSM303DLHC_ALL_VALUES){
+	if(gyroscope_getValues()){
 		if(timeStamp>=255) timeStamp = 0;
-		/* 'G' - A_X, 'H' - MAG_X, 'I' - MAG_Y
-		 * 'J' - MAG_Z, 'K' - Int_temp, 'L' - leak_det
-		 */
 		USART_timestamp_transmit(timeStamp++);
 		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
-		USART_datalog_transmit('X', magnetometer_getData(MAGNETOMETER_X_AXIS));
-		USART_datalog_transmit('Y', magnetometer_getData(MAGNETOMETER_Y_AXIS));
-		USART_datalog_transmit('Z', magnetometer_getData(MAGNETOMETER_Z_AXIS));
+		USART_datalog_transmit('X', gyroscope_getData(GYRO_X_AXIS));
+		USART_datalog_transmit('Y', gyroscope_getData(GYRO_Y_AXIS));
+		USART_datalog_transmit('Z', gyroscope_getData(GYRO_Z_AXIS));
 	} // end if
 
 	if(teller>100){
@@ -82,6 +80,7 @@ void SysTick_Handler(void){
 
 		accelerometer_updateValue();
 		magnetometer_updateValue();
+		gyroscope_updateValue();
 
 		teller = 0;
 //		CAN_transmitAcceleration(&accelerometer_data);

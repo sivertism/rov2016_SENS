@@ -1,0 +1,26 @@
+/**
+  **************************************************************************************
+  * @file    rov2016_Gyroscope.h
+  * @author  Sivert Sliper, Stian Soerensen
+  * @version V01
+  * @date    10-February-2016
+  * @brief   This file contains local variables and macros for rov2016_Gyroscope.h
+  **************************************************************************************
+  */
+
+/* Macro -------------------------------------------------------------------------------*/
+/* Macros for getData methods. */
+#define GYRO_X_AXIS								0
+#define GYRO_Y_AXIS								1
+#define GYRO_Z_AXIS								2
+
+/* Extern variables --------------------------------------------------------------------*/
+
+/* Exported function prototypes --------------------------------------------------------*/
+
+/* Init functions */
+extern void gyroscope_init(void);
+/* Utility */
+extern void gyroscope_updateValue(void);
+extern int16_t gyroscope_getData(uint8_t axis);
+extern uint8_t gyroscope_getValues(void);
