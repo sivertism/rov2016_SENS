@@ -20,9 +20,13 @@
 #include "rov2016_ADC.h"
 #include "rov2016_UART.h"
 #include "rov2016_Gyroscope.h"
+#include "MadgwickAHRS.h"
 
-/* Global variables -------------------------------------------------------------------*/
+/* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
+
+/* Private variables -------------------------------------------------------------------*/
+float gx, gy, gz, ax, ay, az, mx, my, mz;
 
 /* Function declarations ---------------------------------------------------------------*/
 void SysTick_init(void);
@@ -38,7 +42,7 @@ void SysTick_Handler(void);
 void SysTick_init(void) {
 	NVIC_SetPriority(SysTick_IRQn, 1);
 	SysTick->CTRL = 0; /* Disable SysTick */
-	SysTick->LOAD = 72000000/100;  // 10 msek avbruddsintervall.
+	SysTick->LOAD = 72000000/1000;  // 10 msek avbruddsintervall.
 	SysTick->VAL = 0;
 	SysTick->CTRL = (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk
 			| SysTick_CTRL_CLKSOURCE_Msk);
@@ -67,15 +71,34 @@ void SysTick_Handler(void){
 	} // end if
 
 	if(gyroscope_getValues()){
+		/* Load sensordata into floats.
+		 *  	-Acceleration and magnetometer values are normalized -> units does not
+		 *  	matter(only the direction of the vectors matter)
+		 * 		-Gyroscope values should be in radians per second.
+		 */
+		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+		mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
+		my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
+		mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
+		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
+		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
+		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
+
+		/* Update AHRS (Attitude Heading Reference System. */
+		MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz);
+
+		/* Send quaternion values via usb COM port.*/
 		if(timeStamp>=255) timeStamp = 0;
-		USART_timestamp_transmit(timeStamp++);
-		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
-		USART_datalog_transmit('X', gyroscope_getDPS(GYRO_X_AXIS));
-		USART_datalog_transmit('Y', gyroscope_getDPS(GYRO_Y_AXIS));
-		USART_datalog_transmit('Z', gyroscope_getDPS(GYRO_Z_AXIS));
+		USART_timestamp_transmit(++timeStamp);
+		USART_datalog_transmit('G', accelerometer_getRawData(ACCELEROMETER_X_AXIS));
+		USART_datalog_transmit('X', (int16_t)(q0*10000));
+		USART_datalog_transmit('Y', (int16_t)(q1*10000));
+		USART_datalog_transmit('Z', (int16_t)(q2*10000));
 	} // end if
 
-	if(teller>100){
+	if(teller>10){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 
 		accelerometer_updateValue();

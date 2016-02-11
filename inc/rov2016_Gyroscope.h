@@ -10,9 +10,9 @@
 
 /* Macro -------------------------------------------------------------------------------*/
 /* Macros for getData methods. */
-#define GYRO_X_AXIS								0
-#define GYRO_Y_AXIS								1
-#define GYRO_Z_AXIS								2
+#define GYROSCOPE_X_AXIS								0
+#define GYROSCOPE_Y_AXIS								1
+#define GYROSCOPE_Z_AXIS								2
 
 /* Extern variables --------------------------------------------------------------------*/
 

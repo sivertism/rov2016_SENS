@@ -113,7 +113,7 @@ extern void magnetometer_updateValue(void){
  * @param  uint8_t axis - The wanted axis, X=0, Y=1, Z=2
  * @retval The acceleration data for the selected axis (int16_t) in 1mg/LSb.
  */
-extern int16_t accelerometer_getData(uint8_t axis){
+extern int16_t accelerometer_getRawData(uint8_t axis){
 	uint16_t temp = 0;
 	if(axis == 0){
 		temp   = (accelerometer_receive_buffer[1] << 8) | accelerometer_receive_buffer[0];
@@ -135,7 +135,7 @@ extern int16_t accelerometer_getData(uint8_t axis){
  * @param  uint8_t axis - The wanted axis, X=0, Y=1, Z=2
  * @retval The magnetometer data for the selected axis (int16_t) in 463867.2 G/LSb.
  */
-extern int16_t magnetometer_getData(uint8_t axis){
+extern int16_t magnetometer_getRawData(uint8_t axis){
 	uint16_t temp = 0;
 	if(axis == 0){
 		temp   = (magnetometer_receive_buffer[1] << 8) | magnetometer_receive_buffer[0];
