@@ -50,6 +50,14 @@ extern void gyroscope_init(void){
 	gyroInit.Power_Mode = L3GD20_MODE_ACTIVE;
 	L3GD20_Init(&gyroInit);
 
+	/* Configure High Pass filter */
+	L3GD20_FilterConfigTypeDef filterInit;
+	filterInit.HighPassFilter_Mode_Selection = L3GD20_HPM_REF_SIGNAL;
+	filterInit.HighPassFilter_CutOff_Frequency = L3GD20_HPFCF_5;
+	L3GD20_FilterConfig(&filterInit);
+
+	L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE);
+
 	bias_compensation();
 } // end gyroscope_init()
 
@@ -86,15 +94,25 @@ extern int16_t gyroscope_getRaw(uint8_t axis){
 }
 
 /**
+ * @brief	Returns gyro compensation biases.
+ * @param	Axis, can be a value of GYRO_AXIS_x.
+ * @retval	int16_t raw gyro bias value.
+ */
+extern int16_t gyroscope_getBias(uint8_t axis){
+	return bias_compensation_values[axis];
+}
+
+/**
  * @brief	Returns gyro-values from private buffer in radians per second.
  * @param	Axis, can be a value of GYRO_AXIS_x.
  * @retval	float angular velocity in 1 rps/LSb.
  */
 extern float gyroscope_getRPS(uint8_t axis){
 	/* Convert from degrees per second to radians per second */
-	float rps = (float)((receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2]);
+	float rps = (float)((receive_buffer[(axis*2)+1] << 8) + receive_buffer[axis*2]);
 	rps -= bias_compensation_values[axis];
-	rps *= PI/180;
+	rps *= 114.285f; // Sensitivity (dps/LSb)
+	rps *= PI/180; // dps -> rps
 	new_values = 0;
 	return rps;
 }
@@ -106,14 +124,17 @@ extern float gyroscope_getRPS(uint8_t axis){
  */
 static void bias_compensation(void){
 	float x_temp=0,y_temp=0,z_temp=0;
-	uint8_t i = 0;
+	volatile uint8_t i = 0;
+	volatile uint32_t j = 0;
 	for(i=0;i<100;i++){
 		gyroscope_updateValue();
-		x_temp += gyroscope_getRaw(GYROSCOPE_X_AXIS)/100;
-		y_temp += gyroscope_getRaw(GYROSCOPE_Y_AXIS)/100;
-		z_temp += gyroscope_getRaw(GYROSCOPE_Z_AXIS)/100;
+		x_temp += gyroscope_getRaw(GYROSCOPE_X_AXIS);
+		y_temp += gyroscope_getRaw(GYROSCOPE_Y_AXIS);
+		z_temp += gyroscope_getRaw(GYROSCOPE_Z_AXIS);
+		j = 360000;
+		while(j-->0); // Wait ~1 ms
 	}
-	bias_compensation_values[0] = (int16_t) x_temp;
-	bias_compensation_values[1] = (int16_t) y_temp;
-	bias_compensation_values[2] = (int16_t) z_temp;
+	bias_compensation_values[GYROSCOPE_X_AXIS] = (int16_t) x_temp/100.0f;
+	bias_compensation_values[GYROSCOPE_Y_AXIS] = (int16_t) y_temp/100.0f;
+	bias_compensation_values[GYROSCOPE_Z_AXIS] = (int16_t) z_temp/100.0f;
 }

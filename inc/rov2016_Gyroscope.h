@@ -26,3 +26,4 @@ extern void gyroscope_updateValue(void);
 extern int16_t gyroscope_getRaw(uint8_t axis);
 extern float gyroscope_getRPS(uint8_t axis);
 extern uint8_t gyroscope_getValues(void);
+extern int16_t gyroscope_getBias(uint8_t axis);
