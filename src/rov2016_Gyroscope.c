@@ -111,7 +111,7 @@ extern float gyroscope_getRPS(uint8_t axis){
 	/* Convert from degrees per second to radians per second */
 	float rps = (float)((receive_buffer[(axis*2)+1] << 8) + receive_buffer[axis*2]);
 	rps -= bias_compensation_values[axis];
-	rps *= 114.285f; // Sensitivity (dps/LSb)
+	rps /= 133.7469;//114.285f; // Sensitivity (dps/LSb)
 	rps *= PI/180; // dps -> rps
 	new_values = 0;
 	return rps;
@@ -123,7 +123,7 @@ extern float gyroscope_getRPS(uint8_t axis){
  * @retval	None
  */
 static void bias_compensation(void){
-	float x_temp=0,y_temp=0,z_temp=0;
+	int16_t x_temp=0,y_temp=0,z_temp=0;
 	volatile uint8_t i = 0;
 	volatile uint32_t j = 0;
 	for(i=0;i<100;i++){
@@ -132,9 +132,9 @@ static void bias_compensation(void){
 		y_temp += gyroscope_getRaw(GYROSCOPE_Y_AXIS);
 		z_temp += gyroscope_getRaw(GYROSCOPE_Z_AXIS);
 		j = 360000;
-		while(j-->0); // Wait ~1 ms
+		while(j-->0); // Wait ~10 ms
 	}
-	bias_compensation_values[GYROSCOPE_X_AXIS] = (int16_t) x_temp/100.0f;
-	bias_compensation_values[GYROSCOPE_Y_AXIS] = (int16_t) y_temp/100.0f;
-	bias_compensation_values[GYROSCOPE_Z_AXIS] = (int16_t) z_temp/100.0f;
+	bias_compensation_values[GYROSCOPE_X_AXIS] =  x_temp/100;
+	bias_compensation_values[GYROSCOPE_Y_AXIS] =  y_temp/100;
+	bias_compensation_values[GYROSCOPE_Z_AXIS] =  z_temp/100;
 }

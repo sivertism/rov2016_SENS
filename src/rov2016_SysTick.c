@@ -62,7 +62,6 @@ uint8_t teller = 0;
 uint16_t val = 0;
 uint32_t valVoltage = 0;
 uint8_t timeStamp = 0;
-uint8_t kasteteller = 0;
 
 void SysTick_Handler(void){
 	teller++;
@@ -86,7 +85,6 @@ void SysTick_Handler(void){
 		}
 
 	if(gyroscope_getValues() && kjor){
-		if (kasteteller > 10){
 			/* Load sensordata into floats.
 			 *  	-Acceleration and magnetometer values are normalized -> units does not
 			 *  	matter(only the direction of the vectors matter)
@@ -103,8 +101,8 @@ void SysTick_Handler(void){
 			gz = (float)gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
 			/* Update AHRS (Attitude Heading Reference System. */
-			//MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz);
-			MadgwickAHRSupdateIMU(gx, -gy, gz, ax, ay, az);
+			MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
+			//MadgwickAHRSupdateIMU(gx, -gy, gz, ax, ay, az);
 			/* Send quaternion values via usb COM port.*/
 			if(timeStamp>=255) timeStamp = 0;
 			USART_timestamp_transmit(++timeStamp);
@@ -112,21 +110,9 @@ void SysTick_Handler(void){
 			USART_datalog_transmit('L', (int16_t)(q1*10000));
 			USART_datalog_transmit('M', (int16_t)(q2*10000));
 			USART_datalog_transmit('N', (int16_t)(q2*10000));
-			USART_datalog_transmit('X', (int16_t) ax);
-			USART_datalog_transmit('Y', (int16_t) ay);
-			USART_datalog_transmit('Z', (int16_t) az);
-		}else {
-			ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-			ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-			az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
-			mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
-			my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
-			mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
-			gx = (float)gyroscope_getRPS(GYROSCOPE_X_AXIS)-9.0f;
-			gy = (float)gyroscope_getRPS(GYROSCOPE_Y_AXIS)-9.0f;
-			gz = (float)gyroscope_getRPS(GYROSCOPE_Z_AXIS);
-			kasteteller ++;
-		}
+			USART_datalog_transmit('X', (int16_t)gx*1000*59.296);
+			USART_datalog_transmit('Y', gyroscope_getBias(GYROSCOPE_X_AXIS));
+			USART_datalog_transmit('Z', (int16_t)gz*1000*59.296);
 	} // end if
 
 	accelerometer_updateValue();
