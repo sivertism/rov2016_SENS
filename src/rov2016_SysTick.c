@@ -43,7 +43,7 @@ void SysTick_Handler(void);
 void SysTick_init(void) {
 	NVIC_SetPriority(SysTick_IRQn, 1);
 	SysTick->CTRL = 0; /* Disable SysTick */
-	SysTick->LOAD = 72000000/1000;  // 10 msek avbruddsintervall.
+	SysTick->LOAD = 72000000/100;  // 10 msek avbruddsintervall.
 	SysTick->VAL = 0;
 	SysTick->CTRL = (SysTick_CTRL_ENABLE_Msk | SysTick_CTRL_TICKINT_Msk
 			| SysTick_CTRL_CLKSOURCE_Msk);
@@ -72,13 +72,19 @@ void SysTick_Handler(void){
 	} // end if
 
 	/* Check for USART messages, start if 'k' */
-	//	if (USART_getNewBytes()>0){
-	//		uint8_t melding = USART_getRxMessage();
-	//		if (melding == 'k') kjor = 1;
-	//		if (melding == 's') kjor = 0;
-	//	}
+		if (USART_getNewBytes()>0){
+			uint8_t melding = USART_getRxMessage();
+			if (melding == 'k') {
+				kjor = 1;
+				USART_transmit(0x02); // STX
+			}
+			if (melding == 's'){
+				kjor = 0;
+				USART_transmit(0x03); //ETX
+			}
+		}
 
-	if(gyroscope_getValues()){
+	if(gyroscope_getValues() && kjor){
 		if (kasteteller > 10){
 			/* Load sensordata into floats.
 			 *  	-Acceleration and magnetometer values are normalized -> units does not
@@ -122,15 +128,13 @@ void SysTick_Handler(void){
 		}
 	} // end if
 
-	if(teller>10){
+	accelerometer_updateValue();
+	magnetometer_updateValue();
+	gyroscope_updateValue();
+
+	if((teller>10) && kjor){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
-
-		accelerometer_updateValue();
-		magnetometer_updateValue();
-		gyroscope_updateValue();
-
 		teller = 0;
-		//		CAN_transmitAcceleration(&accelerometer_data);
 	} // end if
 
 } // end Systick_Handler()

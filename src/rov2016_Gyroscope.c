@@ -17,10 +17,11 @@
 /* Global variables --------------------------------------------------------------------*/
 
 /* Private Function Prototypes ----------------------------------------------------------*/
-
+static void bias_compensation(void);
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t receive_buffer[6] = {0};
 static uint8_t new_values = 0;
+static int16_t bias_compensation_values[3] = {0};
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -49,6 +50,7 @@ extern void gyroscope_init(void){
 	gyroInit.Power_Mode = L3GD20_MODE_ACTIVE;
 	L3GD20_Init(&gyroInit);
 
+	bias_compensation();
 } // end gyroscope_init()
 
 
@@ -76,9 +78,11 @@ extern uint8_t gyroscope_getValues(void){
  * @param	Axis, can be a value of GYRO_AXIS_x.
  * @retval	int16_t angular velocity in 8.75 mdps/LSb.
  */
-extern int16_t gyroscope_getDPS(uint8_t axis){
+extern int16_t gyroscope_getRaw(uint8_t axis){
 	new_values = 0;
-	return ((uint16_t)receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2];
+	int16_t temp = ((uint16_t)receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2];
+	temp -= bias_compensation_values[axis];
+	return temp;
 }
 
 /**
@@ -89,7 +93,27 @@ extern int16_t gyroscope_getDPS(uint8_t axis){
 extern float gyroscope_getRPS(uint8_t axis){
 	/* Convert from degrees per second to radians per second */
 	float rps = (float)((receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2]);
-	rps *= 0.0001527163095;
+	rps -= bias_compensation_values[axis];
+	rps *= PI/180;
 	new_values = 0;
 	return rps;
+}
+
+/**
+ * @brief	Finds the mean value of the gyro axes and saves it in private vars.
+ * @param	None
+ * @retval	None
+ */
+static void bias_compensation(void){
+	float x_temp=0,y_temp=0,z_temp=0;
+	uint8_t i = 0;
+	for(i=0;i<100;i++){
+		gyroscope_updateValue();
+		x_temp += gyroscope_getRaw(GYROSCOPE_X_AXIS)/100;
+		y_temp += gyroscope_getRaw(GYROSCOPE_Y_AXIS)/100;
+		z_temp += gyroscope_getRaw(GYROSCOPE_Z_AXIS)/100;
+	}
+	bias_compensation_values[0] = (int16_t) x_temp;
+	bias_compensation_values[1] = (int16_t) y_temp;
+	bias_compensation_values[2] = (int16_t) z_temp;
 }
