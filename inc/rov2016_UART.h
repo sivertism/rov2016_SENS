@@ -15,4 +15,5 @@ extern void USART_transmit(uint8_t data);
 extern void USART2_IRQHandler(void);
 extern void USART_timestamp_transmit(uint8_t timestamp);
 extern void USART_datalog_transmit(uint8_t header, uint16_t data);
-
+extern uint8_t USART_getNewBytes(void);
+extern uint8_t USART_getRxMessage(void);

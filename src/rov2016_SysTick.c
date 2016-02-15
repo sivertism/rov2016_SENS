@@ -1,14 +1,14 @@
 /**
-  ******************************************************************************
-  * @file    SysTick_metoder.c
-  * @author  Sivert Sliper and Stian Sørensen
-  * @version V1.0
-  * @date    08-February-2016
-  * @brief   This file contains all the functions prototypes for the SysTick
-  *          timer.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    SysTick_metoder.c
+ * @author  Sivert Sliper and Stian Sørensen
+ * @version V1.0
+ * @date    08-February-2016
+ * @brief   This file contains all the functions prototypes for the SysTick
+ *          timer.
+ *
+ ******************************************************************************
+ */
 
 /* Include---- ------------------------------------------------------------------------*/
 #include "stm32f30x.h"
@@ -26,7 +26,8 @@
 #include "extern_decl_global_vars.h"
 
 /* Private variables -------------------------------------------------------------------*/
-float gx, gy, gz, ax, ay, az, mx, my, mz;
+float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
+static uint8_t kjor = 0;
 
 /* Function declarations ---------------------------------------------------------------*/
 void SysTick_init(void);
@@ -60,42 +61,65 @@ uint8_t teller = 0;
 uint16_t val = 0;
 uint32_t valVoltage = 0;
 uint8_t timeStamp = 0;
+uint8_t kasteteller = 0;
 
 void SysTick_Handler(void){
 	teller++;
-	/* Measure acceleration and send the data via CAN */
 
 	/* Check for new message on CAN and update LEDs */
 	if(CAN_getRxMessages()>0){
 		GPIOE->ODR ^= (1u << CAN_getByteFromMessage(2,0)) << 8;
 	} // end if
 
+	/* Check for USART messages, start if 'k' */
+	//	if (USART_getNewBytes()>0){
+	//		uint8_t melding = USART_getRxMessage();
+	//		if (melding == 'k') kjor = 1;
+	//		if (melding == 's') kjor = 0;
+	//	}
+
 	if(gyroscope_getValues()){
-		/* Load sensordata into floats.
-		 *  	-Acceleration and magnetometer values are normalized -> units does not
-		 *  	matter(only the direction of the vectors matter)
-		 * 		-Gyroscope values should be in radians per second.
-		 */
-		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
-		mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
-		my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
-		mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
-		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
-		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
-		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
+		if (kasteteller > 10){
+			/* Load sensordata into floats.
+			 *  	-Acceleration and magnetometer values are normalized -> units does not
+			 *  	matter(only the direction of the vectors matter)
+			 * 		-Gyroscope values should be in radians per second.
+			 */
+			ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+			ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+			az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+			mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
+			my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
+			mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS)*1.1224f;
+			gx = (float)gyroscope_getRPS(GYROSCOPE_X_AXIS)-9.0f;
+			gy = (float)gyroscope_getRPS(GYROSCOPE_Y_AXIS)-9.0f;
+			gz = (float)gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
-		/* Update AHRS (Attitude Heading Reference System. */
-		MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz);
-
-		/* Send quaternion values via usb COM port.*/
-		if(timeStamp>=255) timeStamp = 0;
-		USART_timestamp_transmit(++timeStamp);
-		USART_datalog_transmit('G', accelerometer_getRawData(ACCELEROMETER_X_AXIS));
-		USART_datalog_transmit('X', (int16_t)(q0*10000));
-		USART_datalog_transmit('Y', (int16_t)(q1*10000));
-		USART_datalog_transmit('Z', (int16_t)(q2*10000));
+			/* Update AHRS (Attitude Heading Reference System. */
+			//MadgwickAHRSupdate(gx, gy, gz, ax, ay, az, mx, my, mz);
+			MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
+			/* Send quaternion values via usb COM port.*/
+			if(timeStamp>=255) timeStamp = 0;
+			USART_timestamp_transmit(++timeStamp);
+			USART_datalog_transmit('K', (int16_t)(q0*10000));
+			USART_datalog_transmit('L', (int16_t)(q1*10000));
+			USART_datalog_transmit('M', (int16_t)(q2*10000));
+			USART_datalog_transmit('N', (int16_t)(q2*10000));
+			USART_datalog_transmit('X', (int16_t)gx*1000);
+			USART_datalog_transmit('Y', (int16_t)gy*1000);
+			USART_datalog_transmit('Z', (int16_t)gz*1000);
+		}else {
+			ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+			ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+			az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+			mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
+			my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
+			mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
+			gx = (float)gyroscope_getRPS(GYROSCOPE_X_AXIS)-9.0f;
+			gy = (float)gyroscope_getRPS(GYROSCOPE_Y_AXIS)-9.0f;
+			gz = (float)gyroscope_getRPS(GYROSCOPE_Z_AXIS);
+			kasteteller ++;
+		}
 	} // end if
 
 	if(teller>10){
@@ -106,7 +130,7 @@ void SysTick_Handler(void){
 		gyroscope_updateValue();
 
 		teller = 0;
-//		CAN_transmitAcceleration(&accelerometer_data);
+		//		CAN_transmitAcceleration(&accelerometer_data);
 	} // end if
 
 } // end Systick_Handler()

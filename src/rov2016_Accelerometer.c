@@ -67,7 +67,7 @@ extern void accelerometer_init(void){
  */
 extern void magnetometer_init(void){
 	LSM303DLHCMag_InitTypeDef magInit;
-	magInit.MagFull_Scale = LSM303DLHC_FS_1_9_GA;
+	magInit.MagFull_Scale = LSM303DLHC_FS_1_3_GA;
 	magInit.Temperature_Sensor = LSM303DLHC_TEMPSENSOR_DISABLE;
 	magInit.MagOutput_DataRate = LSM303DLHC_ODR_100_HZ;
 	magInit.Working_Mode = LSM303DLHC_CONTINUOS_CONVERSION;

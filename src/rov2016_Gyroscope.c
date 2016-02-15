@@ -1,14 +1,14 @@
 /**
-  ******************************************************************************
-  * @file    rov2016_Gyroscope.c
-  * @author	 Sivert Sliper, Stian G. Sørensen
-  * @version V1.0
-  * @date    10-February-2016
-  * @brief   This file uses functions from the stm32f3_discovery_l3gd20
-  * 		library to enable sensing of angular velocity via the l3gd20
-  * 		gyroscope.
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    rov2016_Gyroscope.c
+ * @author	 Sivert Sliper, Stian G. Sørensen
+ * @version V1.0
+ * @date    10-February-2016
+ * @brief   This file uses functions from the stm32f3_discovery_l3gd20
+ * 		library to enable sensing of angular velocity via the l3gd20
+ * 		gyroscope.
+ ******************************************************************************
+ */
 /* Include------------------------------------------------------------------------------*/
 #include "stm32f30x.h"
 #include "rov2016_Gyroscope.h"
@@ -78,7 +78,7 @@ extern uint8_t gyroscope_getValues(void){
  */
 extern int16_t gyroscope_getDPS(uint8_t axis){
 	new_values = 0;
-	return (receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2];
+	return ((uint16_t)receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2];
 }
 
 /**
@@ -88,7 +88,8 @@ extern int16_t gyroscope_getDPS(uint8_t axis){
  */
 extern float gyroscope_getRPS(uint8_t axis){
 	/* Convert from degrees per second to radians per second */
-	float rps = (float)((receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2])*0.0001527163095;
+	float rps = (float)((receive_buffer[(axis*2)+1] << 8) | receive_buffer[axis*2]);
+	rps *= 0.0001527163095;
 	new_values = 0;
 	return rps;
 }
