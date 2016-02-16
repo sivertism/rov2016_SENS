@@ -93,18 +93,24 @@ void SysTick_Handler(void){
 			ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 			ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
 			az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
-			mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS))/LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
-			my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS))/LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
-			mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS))/LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
+
+			mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS));
+			my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
+			mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+
+			mx /= 9.8f; // Compensate for sensitivity difference between magnetometer axes.
+			my /= 9.8f; // Compensate for sensitivity difference between magnetometer axes.
+			mz /= 11.0f; // Compensate for sensitivity difference between magnetometer axes.
+
 			gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
 			gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
 			gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
 			/* Update AHRS (Attitude Heading Reference System. */
-			//MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
+			MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
 			//myFusion(-gy, gx, gz, ax, ay, az, mx, my, mz);
 
-			MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
+			//MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
 			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 			/* Send quaternion values via usb COM port.*/
 			if(timeStamp>=255) timeStamp = 0;
@@ -113,9 +119,9 @@ void SysTick_Handler(void){
 			USART_datalog_transmit('L', (int16_t)(q1*10000));
 			USART_datalog_transmit('M', (int16_t)(q3*10000));
 			USART_datalog_transmit('N', (int16_t)(q2*10000));
-			USART_datalog_transmit('X', (uint16_t)(mx*1000));
-			USART_datalog_transmit('Y', (uint16_t)(my*1000));
-			USART_datalog_transmit('Z', (uint16_t)(mz*1000));
+			USART_datalog_transmit('X', magnetometer_getRawData(MAGNETOMETER_X_AXIS));
+			USART_datalog_transmit('Y', magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
+			USART_datalog_transmit('Z', magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
 	} // end if
 
 	accelerometer_updateValue();

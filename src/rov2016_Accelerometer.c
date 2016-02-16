@@ -92,7 +92,14 @@ extern void accelerometer_updateValue(void){
  * @retval
  */
 extern void magnetometer_updateValue(void){
-	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, &magnetometer_receive_buffer[0], 6);
+	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_L_M, &magnetometer_receive_buffer[0], 1);
+	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_X_H_M, &magnetometer_receive_buffer[1], 1);
+
+	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_L_M, &magnetometer_receive_buffer[2], 1);
+	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Y_H_M, &magnetometer_receive_buffer[3], 1);
+
+	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_L_M, &magnetometer_receive_buffer[4], 1);
+	LSM303DLHC_Read(MAG_I2C_ADDRESS, LSM303DLHC_OUT_Z_H_M, &magnetometer_receive_buffer[5], 1);
 	new_values |= 0b111000; // indicate new magnetometer values.
 } // End magnetometer_updateValue()
 
@@ -113,7 +120,7 @@ extern int16_t accelerometer_getRawData(uint8_t axis){
  * @retval The magnetometer data for the selected axis (int16_t) in 463867.2 G/LSb.
  */
 extern int16_t magnetometer_getRawData(uint8_t axis){
-	int16_t temp = (int16_t) ( ((uint16_t)magnetometer_receive_buffer[2*axis] << 8) | magnetometer_receive_buffer[2*axis+1]);
+	int16_t temp = (int16_t) ( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
 	return temp;
 }
 
