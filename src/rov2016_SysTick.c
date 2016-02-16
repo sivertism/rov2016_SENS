@@ -113,15 +113,16 @@ void SysTick_Handler(void){
 			//MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
 			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 			/* Send quaternion values via usb COM port.*/
-			if(timeStamp>=255) timeStamp = 0;
-			USART_timestamp_transmit(++timeStamp);
-			USART_datalog_transmit('K', (int16_t)(q0*10000));
-			USART_datalog_transmit('L', (int16_t)(q1*10000));
-			USART_datalog_transmit('M', (int16_t)(q3*10000));
-			USART_datalog_transmit('N', (int16_t)(q2*10000));
-			USART_datalog_transmit('X', magnetometer_getRawData(MAGNETOMETER_X_AXIS));
-			USART_datalog_transmit('Y', magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
-			USART_datalog_transmit('Z', magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+//			if(timeStamp>=255) timeStamp = 0;
+//			USART_timestamp_transmit(++timeStamp);
+//			USART_python_logger_transmit('K', (int16_t)(q0*10000));
+//			USART_python_logger_transmit('L', (int16_t)(q1*10000));
+//			USART_python_logger_transmit('M', (int16_t)(q3*10000));
+//			USART_python_logger_transmit('N', (int16_t)(q2*10000));
+//			USART_python_logger_transmit('X', magnetometer_getRawData(MAGNETOMETER_X_AXIS));
+//			USART_python_logger_transmit('Y', magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
+//			USART_python_logger_transmit('Z', magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+			USART_matlab_visualizer_transmit((int16_t)(q0*10000),(int16_t)(q0*10000),(int16_t)(q0*10000),',');
 	} // end if
 
 	accelerometer_updateValue();

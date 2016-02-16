@@ -156,7 +156,7 @@ extern void USART_transmit(uint8_t data){
  * @param	data:	A 16-bit value to be transmitted.
  * @retval None
  */
-extern void USART_datalog_transmit(uint8_t header, uint16_t data){
+extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
 	/*	1. Transmit header
 	 * 	2. Convert and transmit each hex digit of the data coded in ascii.
 	 * 	3. Transmit timestamp header
@@ -171,6 +171,37 @@ extern void USART_datalog_transmit(uint8_t header, uint16_t data){
 	USART_transmit((uint8_t)(hex2ascii_table[(data >> 8 & 0x000F)])); // 	(bit 8-11)
 	USART_transmit((uint8_t)(hex2ascii_table[(data >> 4 & 0x000F)])); // 	(bit 4-7)
 	USART_transmit((uint8_t)(hex2ascii_table[(data & 0x000F)])); // 		(bit 0-3)
+}
+
+/**
+ * @brief  	Transmits a series of  4 16-bit integers separated by commas.
+ * @param 	None
+ * @param	data:	A 16-bit value to be transmitted.
+ * @retval None
+ */
+extern void USART_matlab_visualizer_transmit(uint16_t data1, uint16_t data2, uint16_t data3, uint8_t message_ending){
+
+	/* Send the data1 as ASCII-encoded hexadecimal values
+	 * Send a comma
+	 * ...
+	 */
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(',');
+
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(',');
+
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(10u);
 }
 
 /**
