@@ -115,7 +115,7 @@ extern float gyroscope_getRPS(uint8_t axis){
 	rps /= 114.2857143f;// Sensitivity (dps/LSb) // -286.72 -> 286.72
 	rps *= (PI/180.0f); // dps -> rps // -5.004208 -> 5.004208
 	new_values = 0;
-	return (float)rps;
+	return rps;
 }
 
 /**

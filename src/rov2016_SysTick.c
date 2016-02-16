@@ -101,8 +101,8 @@ void SysTick_Handler(void){
 			gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
 			/* Update AHRS (Attitude Heading Reference System. */
-			//MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
-			MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
+			MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
+			//MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
 			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 			/* Send quaternion values via usb COM port.*/
 			if(timeStamp>=255) timeStamp = 0;
@@ -110,10 +110,10 @@ void SysTick_Handler(void){
 			USART_datalog_transmit('K', (int16_t)(q0*10000));
 			USART_datalog_transmit('L', (int16_t)(q1*10000));
 			USART_datalog_transmit('M', (int16_t)(q2*10000));
-			USART_datalog_transmit('N', (int16_t)(q2*10000));
-			USART_datalog_transmit('X', (int16_t)(gx*1000*57.2858));
-			USART_datalog_transmit('Y', (int16_t)(gy*1000*57.2858));
-			USART_datalog_transmit('Z', (int16_t)(gz*1000*57.2858));
+			USART_datalog_transmit('N', (int16_t)(q3*10000));
+			USART_datalog_transmit('X', (int16_t)(gx*1000*57.2858f));
+			USART_datalog_transmit('Y', (int16_t)(gy*1000*57.2858f));
+			USART_datalog_transmit('Z', (int16_t)(gz*1000*57.2858f));
 	} // end if
 
 	accelerometer_updateValue();
