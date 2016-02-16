@@ -119,10 +119,9 @@ void SysTick_Handler(void){
 //			USART_python_logger_transmit('L', (int16_t)(q1*10000));
 //			USART_python_logger_transmit('M', (int16_t)(q3*10000));
 //			USART_python_logger_transmit('N', (int16_t)(q2*10000));
-//			USART_python_logger_transmit('X', magnetometer_getRawData(MAGNETOMETER_X_AXIS));
-//			USART_python_logger_transmit('Y', magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
-//			USART_python_logger_transmit('Z', magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
-			USART_matlab_visualizer_transmit((int16_t)(q0*10000),(int16_t)(q0*10000),(int16_t)(q0*10000),',');
+//			USART_python_logger_transmit('X', (int16_t)(q1*10000));jkh
+//			USART_python_logger_transmit('Y', (int16_t)(q2*10000));
+//			USART_python_logger_transmit('Z', (int16_t)(q3*10000));
 	} // end if
 
 	accelerometer_updateValue();
@@ -132,6 +131,7 @@ void SysTick_Handler(void){
 	if((teller>10) && kjor){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 		teller = 0;
+		USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
 	} // end if
 
 } // end Systick_Handler()

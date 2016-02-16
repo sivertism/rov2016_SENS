@@ -167,7 +167,7 @@ extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
 	USART_transmit(header);
 	//	USART_transmit((uint8_t)data & 0xFF);
 	//	USART_transmit((uint8_t)(data >> 8));
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 12)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data >> 12 & 0x000F)])); //(bit 12-15)
 	USART_transmit((uint8_t)(hex2ascii_table[(data >> 8 & 0x000F)])); // 	(bit 8-11)
 	USART_transmit((uint8_t)(hex2ascii_table[(data >> 4 & 0x000F)])); // 	(bit 4-7)
 	USART_transmit((uint8_t)(hex2ascii_table[(data & 0x000F)])); // 		(bit 0-3)
@@ -179,29 +179,31 @@ extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
  * @param	data:	A 16-bit value to be transmitted.
  * @retval None
  */
-extern void USART_matlab_visualizer_transmit(uint16_t data1, uint16_t data2, uint16_t data3, uint8_t message_ending){
+extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16_t data3, int16_t data4){
 
-	/* Send the data1 as ASCII-encoded hexadecimal values
-	 * Send a comma
-	 * ...
-	 */
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12 & 0x000F)])); //			(bit 12-15)
 	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
 	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
 	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
 	USART_transmit(',');
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit((uint8_t)(hex2ascii_table[(data2 & 0x000F)])); // 		(bit 0-3)
 	USART_transmit(',');
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(10u);
+	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 12 & 0x000F)]); //(bit 12-15)
+	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 8 & 0x000F)]); // 	(bit 8-11)
+	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 4 & 0x000F)]); // 	(bit 4-7)
+	USART_transmit(hex2ascii_table[(uint8_t)(data3 & 0x000F)]); // 		(bit 0-3)
+	USART_transmit(',');
+
+	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit((uint8_t)(hex2ascii_table[(data4 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(10);
 }
 
 /**
