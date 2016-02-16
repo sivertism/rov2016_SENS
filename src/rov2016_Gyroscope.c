@@ -142,3 +142,5 @@ static void bias_compensation(void){
 	bias_compensation_values[GYROSCOPE_Y_AXIS] =  (int16_t)y_temp;
 	bias_compensation_values[GYROSCOPE_Z_AXIS] =  (int16_t)z_temp;
 }
+
+
