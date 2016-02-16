@@ -109,12 +109,12 @@ extern int16_t gyroscope_getBias(uint8_t axis){
  */
 extern float gyroscope_getRPS(uint8_t axis){
 	/* Convert from degrees per second to radians per second */
-	float rps = (float)((receive_buffer[(axis*2)+1] << 8) + receive_buffer[axis*2]);
+	double rps = (double)(((uint16_t)receive_buffer[(axis*2)+1] << 8) + receive_buffer[axis*2]);
 	rps -= bias_compensation_values[axis];
-	rps /= 133.7469;//114.285f; // Sensitivity (dps/LSb)
-	rps *= PI/180; // dps -> rps
+	rps /= 133.7469f;//114.285f; // Sensitivity (dps/LSb)
+	rps *= (PI/180.0f); // dps -> rps
 	new_values = 0;
-	return rps;
+	return (float)rps;
 }
 
 /**
