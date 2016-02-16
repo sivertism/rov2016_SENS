@@ -111,9 +111,9 @@ void SysTick_Handler(void){
 			USART_datalog_transmit('L', (int16_t)(q1*10000));
 			USART_datalog_transmit('M', (int16_t)(q2*10000));
 			USART_datalog_transmit('N', (int16_t)(q2*10000));
-			USART_datalog_transmit('X', (int16_t)(gx*1000));
-			USART_datalog_transmit('Y', (int16_t)(gy*1000));
-			USART_datalog_transmit('Z', (int16_t)(gz*1000));
+			USART_datalog_transmit('X', (int16_t)(gx*1000*57.2858));
+			USART_datalog_transmit('Y', (int16_t)(gy*1000*57.2858));
+			USART_datalog_transmit('Z', (int16_t)(gz*1000*57.2858));
 	} // end if
 
 	accelerometer_updateValue();
