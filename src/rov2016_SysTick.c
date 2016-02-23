@@ -109,10 +109,11 @@ void SysTick_Handler(void){
 			/* Update AHRS (Attitude Heading Reference System. */
 			MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
 			//myFusion(-gy, gx, gz, ax, ay, az, mx, my, mz);
-
 			//MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
 			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
-			/* Send quaternion values via usb COM port.*/
+
+			/* Send quaternion values*/
+			CAN_transmitQuaternions((uint16_t)(q0*10000),(uint16_t)(q1*10000), (uint16_t)(q2*10000), (uint16_t)(q3*10000));
 //			if(timeStamp>=255) timeStamp = 0;
 //			USART_timestamp_transmit(++timeStamp);
 //			USART_python_logger_transmit('K', (int16_t)(q0*10000));
@@ -131,7 +132,7 @@ void SysTick_Handler(void){
 	if((teller>10) && kjor){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 		teller = 0;
-		USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
+		//USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
 	} // end if
 
 } // end Systick_Handler()
