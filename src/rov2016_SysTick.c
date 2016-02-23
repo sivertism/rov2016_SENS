@@ -1,14 +1,14 @@
 /**
-  ******************************************************************************
-  * @file    SysTick_metoder.c
-  * @author  Sivert Sliper and Stian Sørensen
-  * @version V1.0
-  * @date    08-February-2016
-  * @brief   This file contains all the functions prototypes for the SysTick
-  *          timer.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file    SysTick_metoder.c
+ * @author  Sivert Sliper and Stian Sørensen
+ * @version V1.0
+ * @date    08-February-2016
+ * @brief   This file contains all the functions prototypes for the SysTick
+ *          timer.
+ *
+ ******************************************************************************
+ */
 
 /* Include---- ------------------------------------------------------------------------*/
 #include "stm32f30x.h"
@@ -20,9 +20,15 @@
 #include "rov2016_ADC.h"
 #include "rov2016_UART.h"
 #include "rov2016_Gyroscope.h"
+#include "MadgwickAHRS.h"
+#include "stm32f3_discovery_lsm303dlhc.h"
 
-/* Global variables -------------------------------------------------------------------*/
+/* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
+
+/* Private variables -------------------------------------------------------------------*/
+static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
+static uint8_t kjor = 0;
 
 /* Function declarations ---------------------------------------------------------------*/
 void SysTick_init(void);
@@ -59,31 +65,73 @@ uint8_t timeStamp = 0;
 
 void SysTick_Handler(void){
 	teller++;
-	/* Measure acceleration and send the data via CAN */
 
 	/* Check for new message on CAN and update LEDs */
 	if(CAN_getRxMessages()>0){
 		GPIOE->ODR ^= (1u << CAN_getByteFromMessage(2,0)) << 8;
 	} // end if
 
-	if(gyroscope_getValues()){
-		if(timeStamp>=255) timeStamp = 0;
-		USART_timestamp_transmit(timeStamp++);
-		USART_datalog_transmit('G', accelerometer_getData(ACCELEROMETER_X_AXIS));
-		USART_datalog_transmit('X', gyroscope_getData(GYRO_X_AXIS));
-		USART_datalog_transmit('Y', gyroscope_getData(GYRO_Y_AXIS));
-		USART_datalog_transmit('Z', gyroscope_getData(GYRO_Z_AXIS));
+	/* Check for USART messages, start if 'k' */
+		if (USART_getNewBytes()>0){
+			uint8_t melding = USART_getRxMessage();
+			if (melding == 'k') {
+				kjor = 1;
+				USART_transmit(0x02); // STX
+			}
+			if (melding == 's'){
+				kjor = 0;
+				USART_transmit(0x03); //ETX
+			}
+		}
+
+	if(gyroscope_getValues() && kjor){
+			/* Load sensordata into floats.
+			 *  	-Acceleration and magnetometer values are normalized -> units does not
+			 *  	matter(only the direction of the vectors matter)
+			 * 		-Gyroscope values should be in radians per second.
+			 */
+			ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+			ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+			az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+
+			mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS));
+			my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
+			mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+
+			mx /= 9.8f; // Compensate for sensitivity difference between magnetometer axes.
+			my /= 9.8f; // Compensate for sensitivity difference between magnetometer axes.
+			mz /= 11.0f; // Compensate for sensitivity difference between magnetometer axes.
+
+			gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
+			gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
+			gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
+
+			/* Update AHRS (Attitude Heading Reference System. */
+			MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
+			//myFusion(-gy, gx, gz, ax, ay, az, mx, my, mz);
+
+			//MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
+			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
+			/* Send quaternion values via usb COM port.*/
+//			if(timeStamp>=255) timeStamp = 0;
+//			USART_timestamp_transmit(++timeStamp);
+//			USART_python_logger_transmit('K', (int16_t)(q0*10000));
+//			USART_python_logger_transmit('L', (int16_t)(q1*10000));
+//			USART_python_logger_transmit('M', (int16_t)(q3*10000));
+//			USART_python_logger_transmit('N', (int16_t)(q2*10000));
+//			USART_python_logger_transmit('X', (int16_t)(q1*10000));jkh
+//			USART_python_logger_transmit('Y', (int16_t)(q2*10000));
+//			USART_python_logger_transmit('Z', (int16_t)(q3*10000));
 	} // end if
 
-	if(teller>100){
+	accelerometer_updateValue();
+	magnetometer_updateValue();
+	gyroscope_updateValue();
+
+	if((teller>10) && kjor){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
-
-		accelerometer_updateValue();
-		magnetometer_updateValue();
-		gyroscope_updateValue();
-
 		teller = 0;
-//		CAN_transmitAcceleration(&accelerometer_data);
+		USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
 	} // end if
 
 } // end Systick_Handler()

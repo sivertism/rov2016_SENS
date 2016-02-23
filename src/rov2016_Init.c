@@ -23,11 +23,11 @@ void init(void){
 	GPIO_init();
 	USART_init();
 	CAN_Config();
-	SysTick_init();
 	accelerometer_init();
 	magnetometer_init();
 	gyroscope_init();
 	ADC_init();
 	TIM4_init();
 	TIM2_init();
+	SysTick_init();
 }

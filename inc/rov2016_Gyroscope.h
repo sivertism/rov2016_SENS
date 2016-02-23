@@ -9,10 +9,11 @@
   */
 
 /* Macro -------------------------------------------------------------------------------*/
+#define PI												3.141592654f
 /* Macros for getData methods. */
-#define GYRO_X_AXIS								0
-#define GYRO_Y_AXIS								1
-#define GYRO_Z_AXIS								2
+#define GYROSCOPE_X_AXIS								0
+#define GYROSCOPE_Y_AXIS								1
+#define GYROSCOPE_Z_AXIS								2
 
 /* Extern variables --------------------------------------------------------------------*/
 
@@ -22,5 +23,7 @@
 extern void gyroscope_init(void);
 /* Utility */
 extern void gyroscope_updateValue(void);
-extern int16_t gyroscope_getData(uint8_t axis);
+extern int16_t gyroscope_getRaw(uint8_t axis);
+extern float gyroscope_getRPS(uint8_t axis);
 extern uint8_t gyroscope_getValues(void);
+extern int16_t gyroscope_getBias(uint8_t axis);
