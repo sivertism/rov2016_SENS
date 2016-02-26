@@ -152,10 +152,10 @@ void ADC_init(void){
 	GPIO_Init(GPIOB, &GPIO_InitStructure); // Download settings to GPIOB registers.
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
-	GPIO_Init(GPIOC, &GPIO_InitStructure); // Download settings to GPIOC registers
+	GPIO_Init(GPIOC, &GPIO_InitStructure); // Download settings to GPIOC registers.
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-	GPIO_Init(GPIOF, &GPIO_InitStructure);
+	GPIO_Init(GPIOF, &GPIO_InitStructure); // Download settings to GPIOF registers.
 
 	/* Calibration **********************************************************************/
 	/* Reset ADC registers to their default values. */
