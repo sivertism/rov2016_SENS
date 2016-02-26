@@ -28,7 +28,7 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
-static uint8_t kjor = 0;
+static uint8_t kjor = 0, timestamp=0;
 
 /* Function declarations ---------------------------------------------------------------*/
 void SysTick_init(void);
@@ -113,15 +113,16 @@ void SysTick_Handler(void){
 			//MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
 			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 			/* Send quaternion values via usb COM port.*/
-//			if(timeStamp>=255) timeStamp = 0;
-//			USART_timestamp_transmit(++timeStamp);
-//			USART_python_logger_transmit('K', (int16_t)(q0*10000));
-//			USART_python_logger_transmit('L', (int16_t)(q1*10000));
-//			USART_python_logger_transmit('M', (int16_t)(q3*10000));
-//			USART_python_logger_transmit('N', (int16_t)(q2*10000));
-//			USART_python_logger_transmit('X', (int16_t)(q1*10000));jkh
-//			USART_python_logger_transmit('Y', (int16_t)(q2*10000));
-//			USART_python_logger_transmit('Z', (int16_t)(q3*10000));
+			if(timeStamp>=255) timeStamp = 0;
+			USART_timestamp_transmit(++timeStamp);
+			USART_python_logger_transmit('K', (int16_t)(q0*10000));
+			USART_python_logger_transmit('L', (int16_t)(q1*10000));
+			USART_python_logger_transmit('M', (int16_t)(q3*10000));
+			USART_python_logger_transmit('N', (int16_t)(q2*10000));
+			USART_python_logger_transmit('X', (int16_t)(q1*10000));
+			USART_python_logger_transmit('Y', (int16_t)(q2*10000));
+			USART_python_logger_transmit('Z', (int16_t)(q3*10000));
+			USART_python_logger_transmit('G',ADC_getInternalTemperature());
 	} // end if
 
 	accelerometer_updateValue();
@@ -132,7 +133,6 @@ void SysTick_Handler(void){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 		teller = 0;
 		//USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
-		USART_python_logger_transmit('G',ADC_getInternalTemperature());
 	} // end if
 
 } // end Systick_Handler()

@@ -353,5 +353,5 @@ extern uint16_t ADC_getInternalTemperature(void){
 	/*Voltage in 100 uV per LSb*/
 	uint16_t temp = (3000*ADC_buffer[ADC_CHANNEL_INT_TEMP])/4096;
 	/* The sensor outputs 10 mV per Celsius -> 10 uV per millicelsius.*/
-	return temp/10;
+	return temp*10;
 }
