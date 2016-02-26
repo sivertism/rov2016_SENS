@@ -21,3 +21,4 @@
 extern void ADC_init(void);
 extern uint8_t ADC_getValues(void);
 extern uint16_t ADC_getChannel(uint8_t channel);
+extern uint16_t ADC_getInternalTemperature(void);
