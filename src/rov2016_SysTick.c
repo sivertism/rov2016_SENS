@@ -132,7 +132,7 @@ void SysTick_Handler(void){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 		teller = 0;
 		//USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
-		USART_python_logger_transmit('G',);
+		USART_python_logger_transmit('G',ADC_getInternalTemperature());
 	} // end if
 
 } // end Systick_Handler()
