@@ -76,11 +76,11 @@ void SysTick_Handler(void){
 			uint8_t melding = USART_getRxMessage();
 			if (melding == 'k') {
 				kjor = 1;
-				USART_transmit(0x02); // STX
+				USART_transmit(USART2, 0x02); // STX
 			}
 			if (melding == 's'){
 				kjor = 0;
-				USART_transmit(0x03); //ETX
+				USART_transmit(USART2, 0x03); //ETX
 			}
 		}
 

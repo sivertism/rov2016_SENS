@@ -193,7 +193,7 @@ extern void USART2_init(void){
 } // end USART_init()
 
 /**
- * @brief  	Initializes UART1with interrupt on received message. Connected to X8.
+ * @brief  	Initializes UART3 with interrupt on received message. Connected to X9.
  * 			Baudrate:			115200 bit/s
  * 			Word length:		8 bit
  * 			Parity: 			None
@@ -257,22 +257,23 @@ extern void USART3_init(void){
 
 /**
  * @brief  	Transmits one byte to the USB COM-port.
- * @param  One byte to be transmitted.
+ * @param  	USARTx: 	USART module to transmit via. x can be 1,2,3.
+ * 			data:		One byte to be transmitted.
  * @retval None
  */
-extern void USART_transmit(uint8_t data){
+extern void USART_transmit(USART_TypeDef* USARTx,uint8_t data){
 
 	/* Toggle status LED*/
 	GPIOE->ODR ^= UART_TX_LED << 8;
 
 	/* Wait for USART_TX not busy */
-	while(USART_GetFlagStatus(USART2, USART_FLAG_BUSY) != RESET);
+	while(USART_GetFlagStatus(USARTx, USART_FLAG_BUSY) != RESET);
 
 	/* Send byte */
-	USART_SendData(USART2, (uint8_t) data);
+	USART_SendData(USARTx, (uint8_t) data);
 
 	/* Wait for transmission complete. */
-	while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+	while(USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
 } // end USART_transmit()
 
 /**
@@ -290,13 +291,13 @@ extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
 	 * 	5. Increment timestamp
 	 */
 
-	USART_transmit(header);
+	USART_transmit(USART2, header);
 	//	USART_transmit((uint8_t)data & 0xFF);
 	//	USART_transmit((uint8_t)(data >> 8));
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 12 & 0x000F)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data & 0x000F)])); // 		(bit 0-3)
 }
 
 /**
@@ -307,29 +308,29 @@ extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
  */
 extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16_t data3, int16_t data4){
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12 & 0x000F)])); //			(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(',');
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 >> 12 & 0x000F)])); //			(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, ',');
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 12 & 0x000F)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(',');
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, ',');
 
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 12 & 0x000F)]); //(bit 12-15)
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 8 & 0x000F)]); // 	(bit 8-11)
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 4 & 0x000F)]); // 	(bit 4-7)
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 & 0x000F)]); // 		(bit 0-3)
-	USART_transmit(',');
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 >> 12 & 0x000F)]); //(bit 12-15)
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 >> 8 & 0x000F)]); // 	(bit 8-11)
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 >> 4 & 0x000F)]); // 	(bit 4-7)
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 & 0x000F)]); // 		(bit 0-3)
+	USART_transmit(USART2, ',');
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 12 & 0x000F)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(10);
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, 10);
 }
 
 /**
@@ -339,9 +340,9 @@ extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16
  */
 
 extern void USART_timestamp_transmit(uint8_t timestamp){
-	USART_transmit('T');
-	USART_transmit((uint8_t)(hex2ascii_table[(timestamp >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(timestamp & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, 'T');
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(timestamp >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(timestamp & 0x000F)])); // 		(bit 0-3)
 }
 
 /**
