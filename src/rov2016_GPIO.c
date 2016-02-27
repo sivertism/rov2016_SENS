@@ -8,44 +8,45 @@
   ******************************************************************************
   */
 
-/* Inklusjoner */
+/* Include------------------------------------------------------------------------------*/
 #include "stm32f30x.h"
 #include "stm32f30x_gpio.h"
 #include "stm32f30x_rcc.h"
 
-/* Funksjonsprototyper */
-void GPIO_init(void);
+/* Global variables --------------------------------------------------------------------*/
 
-////////////////////////////////////////////////////////////////////////////////////////
-/* Funksjonsdeklarasjoner */
-////////////////////////////////////////////////////////////////////////////////////////
+/* Private function prototypes ---------------------------------------------------------*/
 
-/* GPIO_init()
- @Beskrivelse
- 	Initialiserer GPIO-modul for utgang til kompassdioder, samt en utgang (PC6) for
- 	avlusingsformål.
+/* Private variables -------------------------------------------------------------------*/
 
- @Inngangsvariabler:
- 	-
-*/
-void GPIO_init(void){
-	/* Gir klokketilgang til GPIOC og GPIOE */
+/* Function definitions ----------------------------------------------------------------*/
+
+
+/**
+ * @brief  	Initialize the GPIO-modules for:
+ * 				- Output for compass LED's. (GPIOE)
+ * 				- Debugging output PC6
+ * 				- Leakage detector enable. (PC13 = enable)
+ * @param  	None
+ * @retval 	None
+ */
+extern void GPIO_init(void){
+	/* Enable clocks. */
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE, ENABLE);
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOF, ENABLE);
 
-	/* Innstillinger */
+	/* GPIO settings */
 	GPIO_InitTypeDef GPIO_init;
 	GPIO_init.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_init.GPIO_OType = GPIO_OType_PP;
 	GPIO_init.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_init.GPIO_Speed = GPIO_Speed_Level_1;
 
-	/* kompassdioder for visuell synkronisering */
+	/* Enable outputs to compass LED's */
 	GPIO_init.GPIO_Pin = 0xFF00; // Pin 8-15
 	GPIO_Init(GPIOE, &GPIO_init);
 
-	 /*  Testpinne  */
-	 GPIO_init.GPIO_Pin = GPIO_Pin_2;
-	 GPIO_Init(GPIOF, &GPIO_init);
+	 /*  PC6 debugging pin and PC13 leakage detector enable  */
+	 GPIO_init.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_13;
+	 GPIO_Init(GPIOC, &GPIO_init);
 } // end GPIO_init()

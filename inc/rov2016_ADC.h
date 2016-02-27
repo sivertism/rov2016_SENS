@@ -1,10 +1,10 @@
 /**
   **************************************************************************************
-  * @file    ADC_metoder.h
+  * @file    rov2016_ADC.h
   * @author  Sivert Sliper, Stian Soerensen
   * @version V01
   * @date    03-February-2016
-  * @brief   This file contains macros and extern function prototypes for ADC_metoder.c
+  * @brief   This file contains macros and extern function prototypes for rov2016_ADC.c
   **************************************************************************************
   */
 

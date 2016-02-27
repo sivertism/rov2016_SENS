@@ -1,6 +1,6 @@
 /**
  **************************************************************************************
- * @file    ADC_metoder.c
+ * @file    rov2016_ADC.c
  * @author  Sivert Sliper, Stian Soerensen
  * @version V1.0
  * @date    3-February-2016
