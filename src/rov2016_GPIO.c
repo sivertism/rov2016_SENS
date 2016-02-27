@@ -1,7 +1,7 @@
 /**
   ******************************************************************************
-  * @file    GPIO_metoder.c
-  * @author
+  * @file    rov2016_GPIO.c
+  * @author  Sivert Sliper, Stian G. Sørensen
   * @version V1.0
   * @date    3-February-2016
   * @brief   This file contains all the functions for the GPIO peripheral.
