@@ -86,7 +86,7 @@ extern void USART1_init(void){
 	NVIC_InitStruct_USART.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_USART);
 
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART1, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
 
 	/* Clock setup */
 	USART_ClockStructInit(&USART_ClockInitStructure);
@@ -105,22 +105,22 @@ extern void USART1_init(void){
 	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
 
 	/* GPIO Config */
-	GPIO_InitTypeDef UART_Init;
+	GPIO_InitTypeDef UART_GPIO_Init;
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
 
 	/* USART1 Tx (PA9) */
-	UART_Init.GPIO_Mode  = GPIO_Mode_AF;
-	UART_Init.GPIO_Speed = GPIO_Speed_Level_1;
-	UART_Init.GPIO_OType = GPIO_OType_PP;
-	UART_Init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+	UART_GPIO_Init.GPIO_Mode  = GPIO_Mode_AF;
+	UART_GPIO_Init.GPIO_Speed = GPIO_Speed_Level_1;
+	UART_GPIO_Init.GPIO_OType = GPIO_OType_PP;
+	UART_GPIO_Init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
 
-	UART_Init.GPIO_Pin = GPIO_Pin_9;
-	GPIO_Init(GPIOA, &UART_Init);
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_9;
+	GPIO_Init(GPIOA, &UART_GPIO_Init);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_7);
 
 	/* USART2 Rx (PA10) */
-	GPIO_InitStructure_UART.GPIO_Pin = GPIO_Pin_10;
-	GPIO_Init(GPIOA, &GPIO_InitStructure_UART);
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_10;
+	GPIO_Init(GPIOA, &UART_GPIO_Init);
 	GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_7);
 
 	/* Enable USART1 */
@@ -192,6 +192,68 @@ extern void USART2_init(void){
 	USART_Cmd(USART2, ENABLE);
 } // end USART_init()
 
+/**
+ * @brief  	Initializes UART1with interrupt on received message. Connected to X8.
+ * 			Baudrate:			115200 bit/s
+ * 			Word length:		8 bit
+ * 			Parity: 			None
+ * 			Stop bits:			1
+ *
+ * @param  None
+ * @retval None
+ */
+extern void USART3_init(void){
+	USART_InitTypeDef USART_InitStructure;
+	USART_ClockInitTypeDef  USART_ClockInitStructure;
+	NVIC_InitTypeDef NVIC_InitStruct_USART;
+
+	/* Interrupt setup */
+	NVIC_InitStruct_USART.NVIC_IRQChannel = USART3_IRQn;
+	NVIC_InitStruct_USART.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_USART);
+
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+
+	/* Clock setup */
+	USART_ClockStructInit(&USART_ClockInitStructure);
+	USART_ClockInit(USART3, &USART_ClockInitStructure);
+
+	/* UART setup */
+	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity =  USART_Parity_No;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_Init(USART3, &USART_InitStructure);
+
+	/* Interrupt on receive buffer not empty */
+	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+
+	/* GPIO Config */
+	GPIO_InitTypeDef UART_GPIO_Init;
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+
+	/* USART3 Tx (PB10) */
+	UART_GPIO_Init.GPIO_Mode  = GPIO_Mode_AF;
+	UART_GPIO_Init.GPIO_Speed = GPIO_Speed_Level_1;
+	UART_GPIO_Init.GPIO_OType = GPIO_OType_PP;
+	UART_GPIO_Init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_10;
+	GPIO_Init(GPIOB, &UART_GPIO_Init);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_7);
+
+	/* USART3 Rx (PB11) */
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_11;
+	GPIO_Init(GPIOB, &UART_GPIO_Init);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_7);
+
+	/* Enable USART3 */
+	USART_Cmd(USART3, ENABLE);
+}
 
 /**
  * @brief  	Transmits one byte to the USB COM-port.
