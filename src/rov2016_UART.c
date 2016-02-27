@@ -64,9 +64,8 @@ extern void USART2_IRQHandler(void){
 	}// end if
 } // end USART2_IRQHandler()
 
-
 /**
- * @brief  	Initializes UART2 with interrupt on received message.
+ * @brief  	Initializes UART1with interrupt on received message. Connected to X8.
  * 			Baudrate:			115200 bit/s
  * 			Word length:		8 bit
  * 			Parity: 			None
@@ -75,7 +74,72 @@ extern void USART2_IRQHandler(void){
  * @param  None
  * @retval None
  */
-extern void USART_init(void){
+extern void USART1_init(void){
+	USART_InitTypeDef USART_InitStructure;
+	USART_ClockInitTypeDef  USART_ClockInitStructure;
+	NVIC_InitTypeDef NVIC_InitStruct_USART;
+
+	/* Interrupt setup */
+	NVIC_InitStruct_USART.NVIC_IRQChannel = USART1_IRQn;
+	NVIC_InitStruct_USART.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_USART);
+
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART1, ENABLE);
+
+	/* Clock setup */
+	USART_ClockStructInit(&USART_ClockInitStructure);
+	USART_ClockInit(USART1, &USART_ClockInitStructure);
+
+	/* UART setup */
+	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity =  USART_Parity_No;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_Init(USART1, &USART_InitStructure);
+
+	/* Interrupt on receive buffer not empty */
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+
+	/* GPIO Config */
+	GPIO_InitTypeDef UART_Init;
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+
+	/* USART1 Tx (PA9) */
+	UART_Init.GPIO_Mode  = GPIO_Mode_AF;
+	UART_Init.GPIO_Speed = GPIO_Speed_Level_1;
+	UART_Init.GPIO_OType = GPIO_OType_PP;
+	UART_Init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+	UART_Init.GPIO_Pin = GPIO_Pin_9;
+	GPIO_Init(GPIOA, &UART_Init);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_7);
+
+	/* USART2 Rx (PA10) */
+	GPIO_InitStructure_UART.GPIO_Pin = GPIO_Pin_10;
+	GPIO_Init(GPIOA, &GPIO_InitStructure_UART);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_7);
+
+	/* Enable USART1 */
+	USART_Cmd(USART1, ENABLE);
+}
+
+
+/**
+ * @brief  	Initializes UART2 with interrupt on received message. Used for serial
+ * 			communication over USB.
+ * 			Baudrate:			115200 bit/s
+ * 			Word length:		8 bit
+ * 			Parity: 			None
+ * 			Stop bits:			1
+ *
+ * @param  None
+ * @retval None
+ */
+extern void USART2_init(void){
 	USART_InitTypeDef USART_InitStructure;
 	USART_ClockInitTypeDef  USART_ClockInitStructure;
 	NVIC_InitTypeDef NVIC_InitStruct_USART;

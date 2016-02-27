@@ -10,7 +10,7 @@
 #define RX_BUFFER_SIZE						10
 
 /* External function prototypes  -------------------------------------------------------*/
-extern void USART_init(void);
+extern void USART2_init(void);
 extern void USART_transmit(uint8_t data);
 extern void USART2_IRQHandler(void);
 extern void USART_timestamp_transmit(uint8_t timestamp);

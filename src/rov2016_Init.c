@@ -21,7 +21,7 @@ void GPIO_init(void);
 
 void init(void){
 	GPIO_init();
-	USART_init();
+	USART2_init();
 	CAN_Config();
 	accelerometer_init();
 	magnetometer_init();
