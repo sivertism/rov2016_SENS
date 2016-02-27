@@ -12,3 +12,5 @@
 
 /* Extern function prototypes ----------------------------------------------------------*/
 extern void GPIO_init(void);
+extern void GPIO_leakage_detector_enable(void);
+extern void GPIO_leakage_detector_disable(void);

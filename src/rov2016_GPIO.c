@@ -49,4 +49,25 @@ extern void GPIO_init(void){
 	 /*  PC6 debugging pin and PC13 leakage detector enable  */
 	 GPIO_init.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_13;
 	 GPIO_Init(GPIOC, &GPIO_init);
+
+	 /* The leakage detector is disabled by default. */
+	 GPIOC->ODR |= GPIO_Pin_13;
 } // end GPIO_init()
+
+/**
+ * @brief  	Sets PC13 low to enable voltage to the leakage detector.
+ * @param  	None
+ * @retval 	None
+ */
+extern void GPIO_leakage_detector_enable(void){
+	GPIOC->ODR &= ~(GPIO_Pin_13);
+}
+
+/**
+ * @brief  	Sets PC13 high to disable voltage to the leakage detector.
+ * @param  	None
+ * @retval 	None
+ */
+extern void GPIO_leakage_detector_disable(void){
+	GPIOC->ODR |= GPIO_Pin_13;
+}
