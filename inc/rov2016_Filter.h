@@ -10,12 +10,12 @@
 
 /* Macro -------------------------------------------------------------------------------*/
 //#define BLOCK_SIZE 10
-#define DESIMERINGSFAKTOR 10
+#define DESIMATION_FACTOR 10
 #define NUM_TAPS 64
 
 
 /* Extern function prototypes ----------------------------------------------------------*/
-extern void FIR_decimate(float *pSrc, float *pDst, float *pTilstand);
+extern void FIR_decimate(float *pSrc, float *pDst, float *pState);
 
 
 
