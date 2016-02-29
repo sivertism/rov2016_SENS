@@ -65,46 +65,49 @@ float firCoeff[NUM_TAPS] = {
 void FIR_decimate(float *pSrc, float *pDst, float *pState){
 
 
-	uint32_t i, taps_teller; // Counter var.
+	uint32_t i, taps_cnt; // Counter var.
 
-	pCoeff = &firCoeff[0]; /* Peker på starten av koeffisientvektoren */
-	//pTilstand = &firTilstand[0]; /* Peker på starten av tilstandsbufferet */
+	pCoeff = &firCoeff[0];
 
 	/* pTilstand peker på starten av de forrige 54 sampler.
 	   pStateCurnt peker der nye inngangsverdier skal skrives.
 	*/
+	/* pState points at the start of the previous 54 samples.
+	 * pStateCurnt points to where new samples are to be written.
+	 */
 	 pStateCurnt = pState + (NUM_TAPS - 10u);
 
-	 /* Kopier 10 nye inngangsverdier til tilstandsbufferet*/
+	 /*Copy 10 new input vals to the state buffer.*/
 	 i = 10;
 	 while(i > 0u) {
 	 	*pStateCurnt++ = *pSrc++;
 	 	i--;
 	 } // end while
 
-	 /* Initialiser akkumulator */
+	 /* Initialize accumulator, state-pointer, coeff-pointer. */
 	 sum0 = 0.0f;
-
-	 /* Initialiser tilstandspeker*/
 	 px = pState;
-
-	 /* Initialiser koeffisientpeker */
 	 pb = pCoeff;
 
 	 /* For å minimere løkke-"overhead" utføres 4 iterasjoner i hver løkke.
 	 	Deler da NUM_TAPS på 4 for å få antall iterasjoner av løkken.
 	 */
-	 taps_teller = NUM_TAPS >> 2;
 
-	 while(taps_teller > 0u){
-	 	/* Les koeffisient og sample*/
+	 /* Four values will be calculated in each loop iteration. This is to
+	  * save some processing time. NUM_TAPS is divided by 4 to get the right
+	  * number of iterations.
+	  */
+	 taps_cnt = NUM_TAPS >> 2;
+
+	 while(taps_cnt > 0u){
+		/* Load a coefficient and a sample. */
 	 	c0 = *(pb++);
 	 	x0 = *(px++);
 
-	 	/* Utfør MAC (Multiply-Accumulate)*/
+	 	/* MAC (Multiply Accumulate)*/
 	 	sum0 += x0 * c0;
 
-	 	/* Gjenta 3 ganger til */
+	 	/* Repeat for the next 3 samples. */
 		c0 = *(pb++);
 	 	x0 = *(px++);
 	 	sum0 += x0 * c0;
@@ -117,20 +120,24 @@ void FIR_decimate(float *pSrc, float *pDst, float *pState){
 	 	x0 = *(px++);
 	 	sum0 += x0 * c0;
 
-	 	taps_teller--;
+	 	taps_cnt--;
 	 }//end while
 
 	 /* Resultatet ligger i akkumulatoren, lagre i utgangsvariabelen*/
+	 /* The resulting sample is stored in the accumulator, saving to the
+	  * output address.
+	  */
 	 *pDst = sum0;
 
-	 /* Kopierer de siste 54 sampler til starten av tilstandsbufferet for
-	  * å være klar for neste funksjonskall. */
+
+	 /* Prepare for the next function call by moving the last 54 samples to the start
+	  * of the buffer.
+	  */
 	 pStateCurnt = pState;
 	 pState += 10;
 
-	 /* Løkke utrulling. Sparer ca 2*(54-9) = 90 klokkesykler (1.26 mikrosekund). */
+	 /* Loop-unrolling by a factor of 6 to reduce processing time. */
 	 i = 9;
-
 	 while(i > 0u){
 	 	*pStateCurnt++ = *pState++;
 	 	*pStateCurnt++ = *pState++;
