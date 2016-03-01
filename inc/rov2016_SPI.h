@@ -9,16 +9,17 @@
   */
 
 /* Macro -------------------------------------------------------------------------------*/
+#define
 /* Macros for the MS5803-14BA pressure sensor */
 #define MS5803_RESET					0x1E
-#define MS5803_CONVERT_D1				0x48
-#define MS5803_CONVERT_D2				0x58
+#define MS5803_CONVERT_PRESSURE			0x48
+#define MS5803_CONVERT_TEMPERATURE		0x58
 #define MS5803_ADC_READ					0x00
 #define MS5803_PROM_READ_BASE			0xA0
 
 /* Extern function prototypes ----------------------------------------------------------*/
-extern void SPI2_init(void);
-extern void MS5803_init(void);
+extern void SPI2_Init(void);
+extern void MS5803_Init(void);
 
 
 
