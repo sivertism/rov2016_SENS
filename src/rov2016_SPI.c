@@ -122,7 +122,8 @@ extern void MS5803_Init(void){
 		SPI2->DR = (uint8_t)0;
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
 
-//		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE));
+		/* Wait until Rx buffer is empty. */
+		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE));
 
 	}
 	isDownloadingPROM = 0;
