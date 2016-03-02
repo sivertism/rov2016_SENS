@@ -19,7 +19,7 @@ void GPIO_init(void);
 
 /* Funtion Definitions -------------------------------------------------------*/
 
-void init(void){
+extern void init(void){
 	GPIO_init();
 	USART2_init();
 	CAN_Config();

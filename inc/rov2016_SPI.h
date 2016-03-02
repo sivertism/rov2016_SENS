@@ -9,7 +9,6 @@
   */
 
 /* Macro -------------------------------------------------------------------------------*/
-#define
 /* Macros for the MS5803-14BA pressure sensor */
 #define MS5803_RESET					0x1E
 #define MS5803_CONVERT_PRESSURE			0x48

@@ -23,7 +23,26 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t PROM_buffer[16];
+static uint8_t PROM_buffer_pos = 0;
+static uint8_t isDownloadingPROM = 0;
+static uint8_t isPressure = 0;
+static uint8_t isTemperature = 0;
 /* Function definitions ----------------------------------------------------------------*/
+
+/**
+ * @brief  	Stores data received from the pressure sensor.
+ * @param  	None
+ * @retval 	None
+ */
+void SPI2_IRQHandler(void){
+	/* Receive PROM calibration coeffs. */
+	if(isDownloadingPROM){
+		PROM_buffer[PROM_buffer_pos] = (uint8_t)SPI2->DR; // Read receive buffer.
+		PROM_buffer_pos++;
+	}
+
+	/* Interrupt should be automatically cleared by hardware. */
+}
 
 /**
  * @brief  	Initializes the SPI-module with the following key settings:
@@ -64,11 +83,11 @@ extern void SPI2_Init(void){
 	 * Capture:				First edge
 	 */
 	SPI2->CR1 &= ~(SPI_CR1_SPE); // Disable SPI2
-	SPI2->CR1 |= (uint32_t)(
-				0b011000		 // Baud rate = F_pclk /16
-				| SPI_CR1_MSTR);  // Master mode
-
-	SPI2->CR2 |= (uint32_t)((0b0111)<<8); // Data size = 8 bit.
+	SPI2->CR1 |= 	(uint32_t)(
+					0b011000		 // Baud rate = F_pclk /16
+					| SPI_CR1_MSTR);  // Master mode
+	SPI2->CR2 |= 	(uint16_t)((0b0111)<<8) // Data size = 8 bit.
+					| SPI_CR2_RXNEIE;		// Enable interrupt on receive.
 
 	/* Enable SPI2 */
 	SPI2->CR1 |= SPI_CR1_SPE;
@@ -80,19 +99,31 @@ extern void SPI2_Init(void){
  * @retval 	None
  */
 extern void MS5803_Init(void){
-	GPIOB->ODR &=
+	isDownloadingPROM  = 1;
+	PROM_buffer_pos = 0;
+
 	SPI2->DR = MS5803_RESET; // Reset sensor to load PROM-content.
 	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for complete transmission.
 
-	/* Wait ~3ms. */
+	/* Wait ~3ms for the calibration values to be loaded to PROM. */
 	volatile uint32_t i = 108000;
 	while(i-->0);
 
 	for(i=0; i<16; i++){
 		SPI2->DR = MS5803_RESET+i; // Send read-commands for the PROM bytes.
-		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for complete transmission.
-		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE)); // Wait for received data.
+		/* Wait for finished transmission (Transmit Empty). */
+		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE))
+
+		/* Send 3 empty bytes to read PROM content. */
+		SPI2->DR = (uint8_t)0;
+		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+		SPI2->DR = (uint8_t)0;
+		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+		SPI2->DR = (uint8_t)0;
+		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+
+//		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_RXNE));
 
 	}
-	/* Read PROM-contents */
+	isDownloadingPROM = 0;
 }
