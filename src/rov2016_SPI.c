@@ -41,11 +41,11 @@ static uint8_t isValid = 0;
 void SPI2_IRQHandler(void){
 	/* Receive PROM calibration coeffs. */
 	if(isDownloadingPROM && isValid){
-		PROM_buffer[PROM_buffer_pos] = SPI2->DR; // Read receive buffer.
+		PROM_buffer[PROM_buffer_pos] = SPI_ReceiveData8(SPI2);//SPI2->DR; // Read receive buffer.
 		printf("Prom byte %d is %d", PROM_buffer_pos, PROM_buffer[PROM_buffer_pos]);
 		PROM_buffer_pos++;
 	} else {
-		uint8_t dummy = SPI2->DR;
+		uint8_t dummy = SPI_ReceiveData8(SPI2);//SPI2->DR;
 	}
 	/* Interrupt should be automatically cleared by hardware. */
 }
@@ -86,23 +86,9 @@ extern void SPI2_Init(void){
 	GPIO_Init(GPIOB, &SPI_GPIO_Init);
 
 	/* SPI Init ************************************************************************/
-	/* Idle state:			Low
-	 * Capture:				First edge
-	 */
-	//SPI2->CR1 &= ~(SPI_CR1_SPE); 				// Disable SPI2
-	/*SPI_I2S_DeInit(SPI2);
-
-	SPI2->CR1 |=    SPI_BaudRatePrescaler_16	// Baud rate = F_pclk /16
-					| SPI_CR1_MSTR				// Master mode.
-					| SPI_CR1_SSM;
-
-	SPI2->CR2 |= 	SPI_DataSize_8b 			// Data size = 8 bit.
-					| SPI_CR2_RXNEIE			// Enable interrupt on receive.
-					| SPI_CR2_FRXTH;			// RXNE threshold = 8bit.
-	 */
 
 	SPI_InitTypeDef SPI_InitStructure;
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
@@ -113,12 +99,12 @@ extern void SPI2_Init(void){
 	SPI_Init(SPI2, &SPI_InitStructure);
 
 	/* Interrupt handler settings */
-		NVIC_InitTypeDef NVIC_InitStruct;
-		NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-		NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
-		NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
-		NVIC_InitStruct.NVIC_IRQChannel = SPI2_IRQn;
-		NVIC_Init(&NVIC_InitStruct);
+	NVIC_InitTypeDef NVIC_InitStruct;
+	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_InitStruct.NVIC_IRQChannel = SPI2_IRQn;
+	NVIC_Init(&NVIC_InitStruct);
 
 	/* RXNE threshold = 8 bit */
 	SPI2->CR2 |= SPI_CR2_FRXTH;
@@ -130,18 +116,11 @@ extern void SPI2_Init(void){
 	/* Initiate CS as high. */
 	GPIOB->ODR |= GPIO_Pin_9;
 
-	/* Empty contents of receive buffer */
-	uint8_t dummy;
-	while(SPI2->SR & SPI_SR_RXNE){
-		printf("RXNE...\n");
-		dummy = SPI2->DR;
-	}
-
 	/* Enable SPI2 */
 	SPI2->CR1 |= SPI_CR1_SPE;
 
 	/* Send testbyte */
-//	SPI2_DR_8BIT = 0x12;
+	//	SPI2_DR_8BIT = 0x12;
 }
 
 /**
@@ -162,7 +141,8 @@ extern void MS5803_Init(void){
 
 	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for complete transmission.
 
-	SPI2_DR_8BIT = (uint8_t)MS5803_RESET; // Reset sensor to load PROM-content.
+	//	SPI2_DR_8BIT = (uint8_t)MS5803_RESET; // Reset sensor to load PROM-content.
+	SPI_SendData8(SPI2, MS5803_RESET);
 
 	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for complete transmission.
 	/* Wait ~3ms for the calibration values to be loaded to PROM. */
@@ -170,20 +150,21 @@ extern void MS5803_Init(void){
 	while(i-->0);
 
 	for(i=0; i<8; i++){
-
-		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI2_DR_8BIT = (uint8_t)(MS5803_PROM_READ_BASE+i); // Send read-commands for the PROM bytes.
+		//		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+		/* Send read-commands for the PROM bytes. */
+		SPI_SendData8(SPI2, (uint8_t)(MS5803_PROM_READ_BASE + i));
 
 		/* Wait for finished transmission (TX FIFO contains less than 8 bits. */
 		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
 
 		/* Send 3 empty bytes to read PROM content. */
 		isValid = 1;
-		SPI2_DR_8BIT = (uint8_t)0;
+		uint8_t null = 0;
+		SPI_SendData8(SPI2, null);
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI2_DR_8BIT = (uint8_t)0;
+		SPI_SendData8(SPI2, null);
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI2_DR_8BIT = (uint8_t)0;
+		SPI_SendData8(SPI2, null);
 		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
 		isValid = 0;
 	}
