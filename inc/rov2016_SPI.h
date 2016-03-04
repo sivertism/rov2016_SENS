@@ -9,6 +9,10 @@
   */
 
 /* Macro -------------------------------------------------------------------------------*/
+
+/* Pointer to send 8 bits through SPI2. Using SPIx->DR results in 16 bits being sent. */
+#define SPI2_DR_8BIT					*((uint8_t*) 0x4000380D)
+
 /* Macros for the MS5803-14BA pressure sensor */
 #define MS5803_RESET					0x1E
 #define MS5803_CONVERT_PRESSURE			0x48

@@ -17,6 +17,8 @@
 #include "rov2016_SPI.h"
 #include "stm32f30x_misc.h"
 
+/* Macro -------------------------------------------------------------------------------*/
+#define DEBUG_MODE
 
 /* Global variables --------------------------------------------------------------------*/
 
@@ -139,9 +141,7 @@ extern void SPI2_Init(void){
 	SPI2->CR1 |= SPI_CR1_SPE;
 
 	/* Send testbyte */
-	SPI2->DR = (uint8_t)0x66;
-
-	printf("Sent testbyte");
+//	SPI2_DR_8BIT = 0x12;
 }
 
 /**
@@ -150,7 +150,10 @@ extern void SPI2_Init(void){
  * @retval 	None
  */
 extern void MS5803_Init(void){
+#ifdef DEBUG_MODE
 	printf("Initiating MS5803...\n");
+#endif
+
 	isDownloadingPROM  = 1;
 	PROM_buffer_pos = 0;
 
@@ -159,26 +162,29 @@ extern void MS5803_Init(void){
 
 	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for complete transmission.
 
-	SPI2->DR = (uint8_t)MS5803_RESET; // Reset sensor to load PROM-content.
+	SPI2_DR_8BIT = (uint8_t)MS5803_RESET; // Reset sensor to load PROM-content.
 
 	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for complete transmission.
 	/* Wait ~3ms for the calibration values to be loaded to PROM. */
-	volatile uint32_t i = 108000;
+	volatile uint32_t i = 36000;
 	while(i-->0);
 
-	for(i=0; i<16; i++){
-		SPI2->DR = MS5803_PROM_READ_BASE+i; // Send read-commands for the PROM bytes.
-		/* Wait for finished transmission (Transmit Empty). */
+	for(i=0; i<8; i++){
+
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+		SPI2_DR_8BIT = (uint8_t)(MS5803_PROM_READ_BASE+i); // Send read-commands for the PROM bytes.
+
+		/* Wait for finished transmission (TX FIFO contains less than 8 bits. */
+		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
 
 		/* Send 3 empty bytes to read PROM content. */
 		isValid = 1;
-		SPI2->DR = (uint8_t)0;
+		SPI2_DR_8BIT = (uint8_t)0;
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI2->DR = (uint8_t)0;
+		SPI2_DR_8BIT = (uint8_t)0;
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI2->DR = (uint8_t)0;
-		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+		SPI2_DR_8BIT = (uint8_t)0;
+		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
 		isValid = 0;
 	}
 	/* Chip select */
