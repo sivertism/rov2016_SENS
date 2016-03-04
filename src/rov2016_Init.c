@@ -13,6 +13,7 @@
 #include "rov2016_TIM.h"
 #include "rov2016_ADC.h"
 #include "rov2016_SysTick.h"
+#include "rov2016_SPI.h"
 /* Funtion Prototypes --------------------------------------------------------*/
 void init(void);
 void GPIO_init(void);
@@ -22,6 +23,7 @@ void GPIO_init(void);
 extern void init(void){
 	GPIO_init();
 	USART2_init();
+	SPI2_Init();
 	CAN_Config();
 	accelerometer_init();
 	magnetometer_init();
@@ -29,5 +31,6 @@ extern void init(void){
 	ADC_init();
 	TIM4_init();
 	TIM2_init();
+	MS5803_Init();
 	SysTick_init();
 }
