@@ -31,6 +31,15 @@ static uint8_t isDownloadingPROM = 0;
 static uint8_t isPressure = 0;
 static uint8_t isTemperature = 0;
 static uint8_t isValid = 0;
+
+/* Sensor coefficients. */
+static uint16_t p_sens; 	// C1 - Pressure sensitivity.
+static uint16_t p_offset; 	// C2 - Pressure offset.
+static uint16_t t_cps; 		// C3 - Temperature Coefficient of Pressure Sensitivity.
+static uint16_t t_cpo; 		// C4 - Temperature Coefficient of Pressure offset.
+static uint16_t t_ref;	 	// C5 - Referance Temperature.
+static uint16_t t_sens;		// C6 - Temperature Coefficient of the temperature.
+
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
@@ -41,9 +50,7 @@ static uint8_t isValid = 0;
 void SPI2_IRQHandler(void){
 	/* Receive PROM calibration coeffs. */
 	if(isDownloadingPROM && isValid){
-		PROM_buffer[PROM_buffer_pos] = SPI_ReceiveData8(SPI2);//SPI2->DR; // Read receive buffer.
-		printf("Prom byte %d is %d", PROM_buffer_pos, PROM_buffer[PROM_buffer_pos]);
-		PROM_buffer_pos++;
+		PROM_buffer[PROM_buffer_pos++] = SPI_ReceiveData8(SPI2);//SPI2->DR; // Read receive buffer.
 	} else {
 		uint8_t dummy = SPI_ReceiveData8(SPI2);//SPI2->DR;
 	}
@@ -89,8 +96,8 @@ extern void SPI2_Init(void){
 
 	SPI_InitTypeDef SPI_InitStructure;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
@@ -111,7 +118,6 @@ extern void SPI2_Init(void){
 
 	/* Interrupt request enable */
 	SPI2->CR2 |= SPI_CR2_RXNEIE;
-
 
 	/* Initiate CS as high. */
 	GPIOB->ODR |= GPIO_Pin_9;
@@ -148,14 +154,18 @@ extern void MS5803_Init(void){
 	/* Wait ~3ms for the calibration values to be loaded to PROM. */
 	volatile uint32_t i = 36000;
 	while(i-->0);
+	/* Chip select */
+	GPIOB->ODR |= GPIO_Pin_9;
 
 	for(i=0; i<8; i++){
+		/* Chip select */
+		GPIOB->ODR &= ~GPIO_Pin_9;
 		//		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
 		/* Send read-commands for the PROM bytes. */
-		SPI_SendData8(SPI2, (uint8_t)(MS5803_PROM_READ_BASE + i));
+		SPI_SendData8(SPI2, (uint8_t)(MS5803_PROM_READ_BASE + 2*i));
 
 		/* Wait for finished transmission (TX FIFO contains less than 8 bits. */
-		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
+		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY));
 
 		/* Send 3 empty bytes to read PROM content. */
 		isValid = 1;
@@ -163,13 +173,23 @@ extern void MS5803_Init(void){
 		SPI_SendData8(SPI2, null);
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
 		SPI_SendData8(SPI2, null);
-		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI_SendData8(SPI2, null);
-		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
+		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY));
+
 		isValid = 0;
+		/* Chip select */
+		GPIOB->ODR |= GPIO_Pin_9;
+
 	}
 	/* Chip select */
 	GPIOB->ODR |= GPIO_Pin_9;
-
 	isDownloadingPROM = 0;
+
+	/* Calculate coefficients. */
+	p_sens = ((uint16_t)PROM_buffer[2] << 8) | PROM_buffer[3];
+	p_offset = ((uint16_t)PROM_buffer[4] << 8) | PROM_buffer[5];
+	t_cps = ((uint16_t)PROM_buffer[6] << 8) | PROM_buffer[7];
+	t_cpo = ((uint16_t)PROM_buffer[8] << 8) | PROM_buffer[9];
+	t_ref = ((uint16_t)PROM_buffer[10] << 8) | PROM_buffer[11];
+	t_sens = ((uint16_t)PROM_buffer[12] << 8) | PROM_buffer[13];
 }
+
