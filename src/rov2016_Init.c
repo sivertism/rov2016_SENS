@@ -23,7 +23,7 @@ void GPIO_init(void);
 extern void init(void){
 	GPIO_init();
 	USART2_init();
-	SPI2_Init();
+//	SPI2_Init();
 	CAN_Config();
 	accelerometer_init();
 	magnetometer_init();
@@ -31,6 +31,6 @@ extern void init(void){
 	ADC_init();
 	TIM4_init();
 	TIM2_init();
-	MS5803_Init();
+//	MS5803_Init();
 	SysTick_init();
 }

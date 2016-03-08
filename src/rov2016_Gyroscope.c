@@ -58,7 +58,7 @@ extern void gyroscope_init(void){
 
 	L3GD20_FilterCmd(L3GD20_HIGHPASSFILTER_DISABLE);
 
-	//bias_compensation();
+	bias_compensation();
 } // end gyroscope_init()
 
 
