@@ -32,5 +32,7 @@ extern void init(void){
 	TIM4_init();
 	TIM2_init();
 	MS5803_Init();
+	MS5803_updateDigital(MS5803_CONVERT_TEMPERATURE);
 	SysTick_init();
+
 }

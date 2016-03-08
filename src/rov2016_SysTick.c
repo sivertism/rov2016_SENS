@@ -20,6 +20,7 @@
 #include "rov2016_ADC.h"
 #include "rov2016_UART.h"
 #include "rov2016_Gyroscope.h"
+#include "rov2016_SPI.h"
 #include "MadgwickAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
 
@@ -128,9 +129,13 @@ void SysTick_Handler(void){
 	magnetometer_updateValue();
 	gyroscope_updateValue();
 
+	/* 10 Hz loop. */
 	if((teller>10) && kjor){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
 		teller = 0;
+		MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
+		printf("Pressure = %d", MS5803_getPressure());
+
 //		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
 
 //		USART_matlab_visualizer_transmit((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
