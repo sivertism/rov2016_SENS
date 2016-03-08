@@ -1,6 +1,6 @@
 /**
  **************************************************************************************
- * @file    ADC_metoder.c
+ * @file    rov2016_ADC.c
  * @author  Sivert Sliper, Stian Soerensen
  * @version V1.0
  * @date    3-February-2016
@@ -152,10 +152,10 @@ void ADC_init(void){
 	GPIO_Init(GPIOB, &GPIO_InitStructure); // Download settings to GPIOB registers.
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3;
-	GPIO_Init(GPIOC, &GPIO_InitStructure); // Download settings to GPIOC registers
+	GPIO_Init(GPIOC, &GPIO_InitStructure); // Download settings to GPIOC registers.
 
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_4;
-	GPIO_Init(GPIOF, &GPIO_InitStructure);
+	GPIO_Init(GPIOF, &GPIO_InitStructure); // Download settings to GPIOF registers.
 
 	/* Calibration **********************************************************************/
 	/* Reset ADC registers to their default values. */
@@ -340,4 +340,18 @@ uint16_t ADC_getChannel(uint8_t channel){
 	if (channel > 5) return 0;
 	new_values &= ~(1u << channel);
 	return (30000*ADC_buffer[channel])/4096;
+}
+
+
+/**
+ * @brief  	Returns the internal temperature of the pod, as measured by the on-board LM35
+ * 			temperature sensor.
+ * @param  	None
+ * @retval 	The temperature in the pod in 1000LSb/Celsius.
+ */
+extern uint16_t ADC_getInternalTemperature(void){
+	/*Voltage in 100 uV per LSb*/
+	uint16_t temp = (3000*ADC_buffer[ADC_CHANNEL_INT_TEMP])/4096;
+	/* The sensor outputs 10 mV per Celsius -> 10 uV per millicelsius.*/
+	return temp*10;
 }

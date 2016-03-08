@@ -64,9 +64,8 @@ extern void USART2_IRQHandler(void){
 	}// end if
 } // end USART2_IRQHandler()
 
-
 /**
- * @brief  	Initializes UART2 with interrupt on received message.
+ * @brief  	Initializes UART1with interrupt on received message. Connected to X8.
  * 			Baudrate:			115200 bit/s
  * 			Word length:		8 bit
  * 			Parity: 			None
@@ -75,7 +74,72 @@ extern void USART2_IRQHandler(void){
  * @param  None
  * @retval None
  */
-extern void USART_init(void){
+extern void USART1_init(void){
+	USART_InitTypeDef USART_InitStructure;
+	USART_ClockInitTypeDef  USART_ClockInitStructure;
+	NVIC_InitTypeDef NVIC_InitStruct_USART;
+
+	/* Interrupt setup */
+	NVIC_InitStruct_USART.NVIC_IRQChannel = USART1_IRQn;
+	NVIC_InitStruct_USART.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_USART);
+
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
+
+	/* Clock setup */
+	USART_ClockStructInit(&USART_ClockInitStructure);
+	USART_ClockInit(USART1, &USART_ClockInitStructure);
+
+	/* UART setup */
+	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity =  USART_Parity_No;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_Init(USART1, &USART_InitStructure);
+
+	/* Interrupt on receive buffer not empty */
+	USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+
+	/* GPIO Config */
+	GPIO_InitTypeDef UART_GPIO_Init;
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
+
+	/* USART1 Tx (PA9) */
+	UART_GPIO_Init.GPIO_Mode  = GPIO_Mode_AF;
+	UART_GPIO_Init.GPIO_Speed = GPIO_Speed_Level_1;
+	UART_GPIO_Init.GPIO_OType = GPIO_OType_PP;
+	UART_GPIO_Init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_9;
+	GPIO_Init(GPIOA, &UART_GPIO_Init);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_7);
+
+	/* USART2 Rx (PA10) */
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_10;
+	GPIO_Init(GPIOA, &UART_GPIO_Init);
+	GPIO_PinAFConfig(GPIOA, GPIO_PinSource10, GPIO_AF_7);
+
+	/* Enable USART1 */
+	USART_Cmd(USART1, ENABLE);
+}
+
+
+/**
+ * @brief  	Initializes UART2 with interrupt on received message. Used for serial
+ * 			communication over USB.
+ * 			Baudrate:			115200 bit/s
+ * 			Word length:		8 bit
+ * 			Parity: 			None
+ * 			Stop bits:			1
+ *
+ * @param  None
+ * @retval None
+ */
+extern void USART2_init(void){
 	USART_InitTypeDef USART_InitStructure;
 	USART_ClockInitTypeDef  USART_ClockInitStructure;
 	NVIC_InitTypeDef NVIC_InitStruct_USART;
@@ -128,25 +192,88 @@ extern void USART_init(void){
 	USART_Cmd(USART2, ENABLE);
 } // end USART_init()
 
+/**
+ * @brief  	Initializes UART3 with interrupt on received message. Connected to X9.
+ * 			Baudrate:			115200 bit/s
+ * 			Word length:		8 bit
+ * 			Parity: 			None
+ * 			Stop bits:			1
+ *
+ * @param  None
+ * @retval None
+ */
+extern void USART3_init(void){
+	USART_InitTypeDef USART_InitStructure;
+	USART_ClockInitTypeDef  USART_ClockInitStructure;
+	NVIC_InitTypeDef NVIC_InitStruct_USART;
+
+	/* Interrupt setup */
+	NVIC_InitStruct_USART.NVIC_IRQChannel = USART3_IRQn;
+	NVIC_InitStruct_USART.NVIC_IRQChannelPreemptionPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelCmd = ENABLE;
+	NVIC_Init(&NVIC_InitStruct_USART);
+
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+
+	/* Clock setup */
+	USART_ClockStructInit(&USART_ClockInitStructure);
+	USART_ClockInit(USART3, &USART_ClockInitStructure);
+
+	/* UART setup */
+	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+	USART_InitStructure.USART_StopBits = USART_StopBits_1;
+	USART_InitStructure.USART_Parity =  USART_Parity_No;
+	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_Init(USART3, &USART_InitStructure);
+
+	/* Interrupt on receive buffer not empty */
+	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+
+	/* GPIO Config */
+	GPIO_InitTypeDef UART_GPIO_Init;
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+
+	/* USART3 Tx (PB10) */
+	UART_GPIO_Init.GPIO_Mode  = GPIO_Mode_AF;
+	UART_GPIO_Init.GPIO_Speed = GPIO_Speed_Level_1;
+	UART_GPIO_Init.GPIO_OType = GPIO_OType_PP;
+	UART_GPIO_Init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_10;
+	GPIO_Init(GPIOB, &UART_GPIO_Init);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource10, GPIO_AF_7);
+
+	/* USART3 Rx (PB11) */
+	UART_GPIO_Init.GPIO_Pin = GPIO_Pin_11;
+	GPIO_Init(GPIOB, &UART_GPIO_Init);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource11, GPIO_AF_7);
+
+	/* Enable USART3 */
+	USART_Cmd(USART3, ENABLE);
+}
 
 /**
  * @brief  	Transmits one byte to the USB COM-port.
- * @param  One byte to be transmitted.
+ * @param  	USARTx: 	USART module to transmit via. x can be 1,2,3.
+ * 			data:		One byte to be transmitted.
  * @retval None
  */
-extern void USART_transmit(uint8_t data){
+extern void USART_transmit(USART_TypeDef* USARTx,uint8_t data){
 
 	/* Toggle status LED*/
 	GPIOE->ODR ^= UART_TX_LED << 8;
 
 	/* Wait for USART_TX not busy */
-	while(USART_GetFlagStatus(USART2, USART_FLAG_BUSY) != RESET);
+	while(USART_GetFlagStatus(USARTx, USART_FLAG_BUSY) != RESET);
 
 	/* Send byte */
-	USART_SendData(USART2, (uint8_t) data);
+	USART_SendData(USARTx, (uint8_t) data);
 
 	/* Wait for transmission complete. */
-	while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+	while(USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
 } // end USART_transmit()
 
 /**
@@ -164,13 +291,13 @@ extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
 	 * 	5. Increment timestamp
 	 */
 
-	USART_transmit(header);
+	USART_transmit(USART2, header);
 	//	USART_transmit((uint8_t)data & 0xFF);
 	//	USART_transmit((uint8_t)(data >> 8));
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 12 & 0x000F)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data & 0x000F)])); // 		(bit 0-3)
 }
 
 /**
@@ -181,29 +308,29 @@ extern void USART_python_logger_transmit(uint8_t header, uint16_t data){
  */
 extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16_t data3, int16_t data4){
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 12 & 0x000F)])); //			(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(',');
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 >> 12 & 0x000F)])); //			(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data1 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, ',');
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 12 & 0x000F)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data2 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(',');
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data2 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, ',');
 
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 12 & 0x000F)]); //(bit 12-15)
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 8 & 0x000F)]); // 	(bit 8-11)
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 >> 4 & 0x000F)]); // 	(bit 4-7)
-	USART_transmit(hex2ascii_table[(uint8_t)(data3 & 0x000F)]); // 		(bit 0-3)
-	USART_transmit(',');
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 >> 12 & 0x000F)]); //(bit 12-15)
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 >> 8 & 0x000F)]); // 	(bit 8-11)
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 >> 4 & 0x000F)]); // 	(bit 4-7)
+	USART_transmit(USART2, hex2ascii_table[(uint8_t)(data3 & 0x000F)]); // 		(bit 0-3)
+	USART_transmit(USART2, ',');
 
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 12 & 0x000F)])); //(bit 12-15)
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 8 & 0x000F)])); // 	(bit 8-11)
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(data4 & 0x000F)])); // 		(bit 0-3)
-	USART_transmit(10);
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 >> 12 & 0x000F)])); //(bit 12-15)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 >> 8 & 0x000F)])); // 	(bit 8-11)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(data4 & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, 10);
 }
 
 /**
@@ -213,9 +340,9 @@ extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16
  */
 
 extern void USART_timestamp_transmit(uint8_t timestamp){
-	USART_transmit('T');
-	USART_transmit((uint8_t)(hex2ascii_table[(timestamp >> 4 & 0x000F)])); // 	(bit 4-7)
-	USART_transmit((uint8_t)(hex2ascii_table[(timestamp & 0x000F)])); // 		(bit 0-3)
+	USART_transmit(USART2, 'T');
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(timestamp >> 4 & 0x000F)])); // 	(bit 4-7)
+	USART_transmit(USART2, (uint8_t)(hex2ascii_table[(timestamp & 0x000F)])); // 		(bit 0-3)
 }
 
 /**
