@@ -22,6 +22,7 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "MadgwickAHRS.h"
+//#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
 
 /* Global variables --------------------------------------------------------------------*/
@@ -72,63 +73,22 @@ void SysTick_Handler(void){
 	} // end if
 
 	/* Check for USART messages, start if 'k' */
-		if (USART_getNewBytes()>0){
-			uint8_t melding = USART_getRxMessage();
-			if (melding == 'k') {
-				kjor = 1;
-				USART_transmit(USART2, 0x02); // STX
-			}
-			if (melding == 's'){
-				kjor = 0;
-				USART_transmit(USART2, 0x03); //ETX
-			}
+	if (USART_getNewBytes()>0){
+		uint8_t melding = USART_getRxMessage();
+		if (melding == 'k') {
+			kjor = 1;
+			USART_transmit(USART2, 0x02); // STX
 		}
-
-	if(gyroscope_getValues() && kjor){
-			/* Load sensordata into floats.
-			 *  	-Acceleration and magnetometer values are normalized -> units does not
-			 *  	matter(only the direction of the vectors matter)
-			 * 		-Gyroscope values should be in radians per second.
-			 */
-			ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-			ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-			az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
-
-			mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS));
-			my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
-			mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
-
-			mx /= 9.8f; // Compensate for sensitivity difference between magnetometer axes.
-			my /= 9.8f; // Compensate for sensitivity difference between magnetometer axes.
-			mz /= 11.0f; // Compensate for sensitivity difference between magnetometer axes.
-
-			gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
-			gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
-			gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
-
-			/* Update AHRS (Attitude Heading Reference System. */
-//			MadgwickAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
-			MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
-			//myFusion(-gy, gx, gz, ax, ay, az, mx, my, mz);
-
-//			MadgwickAHRSupdateIMU(-gy, gx, gz, ax, ay, az);
-			//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
-			/* Send quaternion values via usb COM port.*/
-//			if(timeStamp>=255) timeStamp = 0;
-//			USART_timestamp_transmit(++timeStamp);
-//			USART_python_logger_transmit('K', (int16_t)(q0*10000));
-//			USART_python_logger_transmit('L', (int16_t)(q1*10000));
-//			USART_python_logger_transmit('M', (int16_t)(q3*10000));
-//			USART_python_logger_transmit('N', (int16_t)(q2*10000));
-//			USART_python_logger_transmit('X', (int16_t)(q1*10000));
-//			USART_python_logger_transmit('Y', (int16_t)(q2*10000));
-//			USART_python_logger_transmit('Z', (int16_t)(q3*10000));
-//			USART_python_logger_transmit('G',ADC_getInternalTemperature());
-	} // end if
+		if (melding == 's'){
+			kjor = 0;
+			USART_transmit(USART2, 0x03); //ETX
+		}
+	}
 
 	accelerometer_updateValue();
 	magnetometer_updateValue();
 	gyroscope_updateValue();
+
 
 	/* 10 Hz loop. */
 	if((teller>100) && kjor){
@@ -144,7 +104,64 @@ void SysTick_Handler(void){
 
 //		USART_matlab_visualizer_transmit((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
 //		USART_matlab_visualizer_transmit((int16_t)(ax), (int16_t)(ay), (int16_t)(az), (int16_t)(gz));
-		USART_matlab_visualizer_transmit((int16_t)MS5803_getPressure(), 0,0,0);
+//		USART_matlab_visualizer_transmit((int16_t)MS5803_getPressure(), 0,0,0);
+
+	if(kjor){
+		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+
+		mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS));
+		my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
+		mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+
+		/* Compensate for sensitivity difference between magnetometer axes. */
+		mx /= 9.8f;
+		my /= 9.8f;
+		mz /= 11.0f;
+
+		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
+		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
+		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
+
+		/* Update AHRS (Attitude Heading Reference System. */
+//		MadgwickAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
+
+		/* From testing. */
+		MadgwickAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
+//		MahonyAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
+
+		/* From MCD application team. */
+//		MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
+		//myFusion(-gy, gx, gz, ax, ay, az, mx, my, mz);
+
+//		MadgwickAHRSupdateIMU(gy, -gx, gz, -ax, -ay, az);
+		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
+	} // end if
+
+
+
+	if((teller>10) && kjor){
+		GPIOE->ODR ^= SYSTICK_LED << 8;
+		teller = 0;
+
+		/* Transmit quaternions over CAN-bus. */
+		//		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
+
+		/* Transmit q0...q3 to matlab. */
+//		USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
+
+		/* Transmit a_x, a_y, a_z to matlab. */
+//		USART_matlab_visualizer_transmit((int16_t)(ax*10), (int16_t)(ay*10), (int16_t)(az*10), (int16_t)(0u));
+
+		/* Transmit g_x, g_y, g_z x10000 to matlab. */
+//		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
+
+		/* Transmit m_x, m_y, m_z x100 to matlab.*/
+//		USART_matlab_visualizer_transmit((int16_t)(mx*100), (int16_t)(my*100), (int16_t)(mz*100), (int16_t)(0u));
+
+		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
+//		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
 	} // end if
 
 } // end Systick_Handler()

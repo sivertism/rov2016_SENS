@@ -23,7 +23,7 @@ void GPIO_init(void);
 extern void init(void){
 	GPIO_init();
 	USART2_init();
-	SPI2_Init();
+//	SPI2_Init();
 	CAN_Config();
 	accelerometer_init();
 	magnetometer_init();
