@@ -22,8 +22,6 @@
 /* Static Function declarations --------------------------------------------------------*/
 
 /* Private variables -------------------------------------------------------------------*/
-static uint8_t TransmitMailbox = 0; // Used for transmitting messages.
-static CanTxMsg TxMsg = {0};
 static uint8_t dataBuffer[8] = {0};
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -57,28 +55,17 @@ extern void CAN_transmitAcceleration(int8_t acc_array){
 /**
  * @brief  Transmit 4 quaternions as 4 int16_t split into 8 bytes.
  * @param  int16_t q0, q1, q2, q3
- * @retval None.
+ * @retval None
  */
 extern void CAN_transmitQuaternions(int16_t q0, int16_t q1, int16_t q2, int16_t q3){
-	/* Toggle status LED */
-	GPIOE->ODR ^= CAN_TX_LED << 8;
+	dataBuffer[0] = (uint8_t)(q0 >> 8u);
+	dataBuffer[1] = (uint8_t)(q0 & 0xFF);
+	dataBuffer[2] = (uint8_t)(q1 >> 8u);
+	dataBuffer[3] = (uint8_t)(q1 & 0xFF);
+	dataBuffer[4] = (uint8_t)(q2 >> 8u);
+	dataBuffer[5] = (uint8_t)(q2 & 0xFF);
+	dataBuffer[6] = (uint8_t)(q3 >> 8u);
+	dataBuffer[7] = (uint8_t)(q3 & 0xFF);
 
-	/* Configure the message to be transmitted. */
-	TxMsg.StdId = SENSOR_AHRS_QUATERNIONS;
-	TxMsg.DLC = 8;
-
-	TxMsg.Data[0] = (uint8_t)(q0 >> 8u);
-	TxMsg.Data[1] = (uint8_t)(q0 & 0xFF);
-	TxMsg.Data[2] = (uint8_t)(q1 >> 8u);
-	TxMsg.Data[3] = (uint8_t)(q1 & 0xFF);
-	TxMsg.Data[4] = (uint8_t)(q2 >> 8u);
-	TxMsg.Data[5] = (uint8_t)(q2 & 0xFF);
-	TxMsg.Data[6] = (uint8_t)(q3 >> 8u);
-	TxMsg.Data[7] = (uint8_t)(q3 & 0xFF);
-
-	/* Put message in Tx Mailbox and store the mailbox number. */
-	TransmitMailbox = CAN_Transmit(CAN1, &TxMsg);
-
-	/* Wait on Transmit */
-	while((CAN_TransmitStatus(CAN1, TransmitMailbox) != CAN_TxStatus_Ok));
+	CAN_transmitBuffer(SENSOR_AHRS_QUATERNIONS, dataBuffer, 8, CAN_ID_STD);
 }
