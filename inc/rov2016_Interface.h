@@ -8,6 +8,7 @@
   **************************************************************************************
   */
 
+/* Exported function prototypes --------------------------------------------------------*/
 uint16_t ADC1_getChannel(uint8_t channel);
 uint16_t ADC4_getChannel(uint8_t channel);
 extern void CAN_transmitQuaternions(int16_t q0, int16_t q1, int16_t q2, int16_t q3);
