@@ -25,12 +25,20 @@
 /* Private function prototypes ---------------------------------------------------------*/
 
 /* Private variables -------------------------------------------------------------------*/
-static uint8_t PROM_buffer[16];
-static uint8_t PROM_buffer_pos = 0;
-static uint8_t isDownloadingPROM = 0;
-static uint8_t isPressure = 0;
-static uint8_t isTemperature = 0;
+static uint8_t buffer[16];
+static uint8_t buffer_pos = 0;
 static uint8_t isValid = 0;
+static uint32_t temperature_digital, pressure_digital;
+static int32_t dT; // Temperature difference, used for calculating pressure.
+
+/* Sensor coefficients. */
+static uint16_t p_sens; 	// C1 - Pressure sensitivity.
+static uint16_t p_offset; 	// C2 - Pressure offset.
+static uint16_t t_cps; 		// C3 - Temperature Coefficient of Pressure Sensitivity.
+static uint16_t t_cpo; 		// C4 - Temperature Coefficient of Pressure offset.
+static uint16_t t_ref;	 	// C5 - Referance Temperature.
+static uint16_t t_sens;		// C6 - Temperature Coefficient of the temperature.
+
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
@@ -40,10 +48,8 @@ static uint8_t isValid = 0;
  */
 void SPI2_IRQHandler(void){
 	/* Receive PROM calibration coeffs. */
-	if(isDownloadingPROM && isValid){
-		PROM_buffer[PROM_buffer_pos] = SPI_ReceiveData8(SPI2);//SPI2->DR; // Read receive buffer.
-		printf("Prom byte %d is %d", PROM_buffer_pos, PROM_buffer[PROM_buffer_pos]);
-		PROM_buffer_pos++;
+	if(isValid){
+		buffer[buffer_pos++] = SPI_ReceiveData8(SPI2);//SPI2->DR; // Read receive buffer.
 	} else {
 		uint8_t dummy = SPI_ReceiveData8(SPI2);//SPI2->DR;
 	}
@@ -89,8 +95,8 @@ extern void SPI2_Init(void){
 
 	SPI_InitTypeDef SPI_InitStructure;
 	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
@@ -112,7 +118,6 @@ extern void SPI2_Init(void){
 	/* Interrupt request enable */
 	SPI2->CR2 |= SPI_CR2_RXNEIE;
 
-
 	/* Initiate CS as high. */
 	GPIOB->ODR |= GPIO_Pin_9;
 
@@ -130,11 +135,10 @@ extern void SPI2_Init(void){
  */
 extern void MS5803_Init(void){
 #ifdef DEBUG_MODE
-	printf("Initiating MS5803...\n");
+	printf("Initiating MS5803...");
 #endif
 
-	isDownloadingPROM  = 1;
-	PROM_buffer_pos = 0;
+	buffer_pos = 0;
 
 	/* Chip select */
 	GPIOB->ODR &= ~GPIO_Pin_9;
@@ -148,14 +152,18 @@ extern void MS5803_Init(void){
 	/* Wait ~3ms for the calibration values to be loaded to PROM. */
 	volatile uint32_t i = 36000;
 	while(i-->0);
+	/* Chip select */
+	GPIOB->ODR |= GPIO_Pin_9;
 
 	for(i=0; i<8; i++){
+		/* Chip select */
+		GPIOB->ODR &= ~GPIO_Pin_9;
 		//		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
 		/* Send read-commands for the PROM bytes. */
-		SPI_SendData8(SPI2, (uint8_t)(MS5803_PROM_READ_BASE + i));
+		SPI_SendData8(SPI2, (uint8_t)(MS5803_PROM_READ_BASE + 2*i));
 
 		/* Wait for finished transmission (TX FIFO contains less than 8 bits. */
-		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
+		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY));
 
 		/* Send 3 empty bytes to read PROM content. */
 		isValid = 1;
@@ -163,13 +171,103 @@ extern void MS5803_Init(void){
 		SPI_SendData8(SPI2, null);
 		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
 		SPI_SendData8(SPI2, null);
-		while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
-		SPI_SendData8(SPI2, null);
-		while(SPI_GetTransmissionFIFOStatus(SPI2) > SPI_TransmissionFIFOStatus_Empty);
+		while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY));
+
 		isValid = 0;
+		/* Chip select */
+		GPIOB->ODR |= GPIO_Pin_9;
+
 	}
 	/* Chip select */
 	GPIOB->ODR |= GPIO_Pin_9;
 
-	isDownloadingPROM = 0;
+	/* Calculate coefficients. */
+	p_sens = ((uint16_t)buffer[2] << 8) | buffer[3];
+	p_offset = ((uint16_t)buffer[4] << 8) | buffer[5];
+	t_cps = ((uint16_t)buffer[6] << 8) | buffer[7];
+	t_cpo = ((uint16_t)buffer[8] << 8) | buffer[9];
+	t_ref = ((uint16_t)buffer[10] << 8) | buffer[11];
+	t_sens = ((uint16_t)buffer[12] << 8) | buffer[13];
+}
+
+/**
+ * @brief  	Updates the digital temperature value from the MS5803 pressure sensor.
+ * @param  	sensor: Specifies the sensor to be read. can be
+ * 			MS5803_CONVERT_TEMPERATURE or MS5803_CONVERT_PRESSURE.
+ * @retval 	None
+ */
+extern void MS5803_updateDigital(uint8_t sensor){
+	/* Reset buffer index. */
+	buffer_pos = 0;
+
+	/* Chip select */
+	GPIOB->ODR &= ~GPIO_Pin_9;
+
+	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE)); // Wait for available FIFO.
+	SPI_SendData8(SPI2, sensor);
+
+	/* Wait ~9ms for the conversion. */
+	volatile uint32_t i = 100000;
+	while(i-->0);
+
+	/* Chip select */
+	GPIOB->ODR |= GPIO_Pin_9;
+	GPIOB->ODR &= ~GPIO_Pin_9;
+
+	SPI_SendData8(SPI2, MS5803_ADC_READ);
+	while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY));
+	isValid = 1;
+
+	/* Read 24 bits. Data is received through interrupts. */
+	SPI_SendData8(SPI2, 0);
+	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+	SPI_SendData8(SPI2, 0);
+	while(!SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_TXE));
+	SPI_SendData8(SPI2, 0);
+
+	/* Wait for complete transmission. */
+	while(SPI_I2S_GetFlagStatus(SPI2, SPI_I2S_FLAG_BSY));
+	isValid = 0; // Deactivate reading (flag for interrupt routine).
+
+	/* Chip select */
+	GPIOB->ODR |= GPIO_Pin_9;
+
+	/* Store values from buffer. */
+	if(sensor == MS5803_CONVERT_TEMPERATURE){
+		temperature_digital = (uint32_t)(
+							  ((uint32_t) buffer[0] << 16)
+							| ((uint32_t) buffer[1] << 8)
+							| buffer[2]);
+	} else {
+		pressure_digital = 	(uint32_t)(
+							((uint32_t) buffer[0] << 16)
+						| 	((uint32_t) buffer[1] << 8)
+						| 	buffer[2]);
+	}
+}
+
+/**
+ * @brief  	Calculates and returns the temperature read by the MS5803 sensor.
+ * @param  	None
+ * @retval 	Temperature in 0.01*C resolution
+ */
+extern int32_t MS5803_getTemperature(){
+	/* Calculations are based on the MS5803 data sheet, page 8. */
+	dT = temperature_digital - (uint32_t)(t_ref << 8);
+	int32_t temperature = 2000 + (int32_t)(((int64_t)dT*t_sens) >> 23);
+	return temperature;
+}
+
+/**
+ * @brief  	Caution! Should be called after the temperature is initially read.
+ * 			Calculates and returns the pressure read by the MS5803 sensor.
+ * @param  	None
+ * @retval 	Pressure in 0.1 mbar resolution.
+ */
+extern int32_t MS5803_getPressure(){
+	/* Calculations are based on the MS503 data sheet, page 8. */
+	int64_t offset = ((uint32_t)p_offset << 16) + (((int64_t)t_cpo*dT)>>7);
+	int64_t sens = ((uint32_t)p_sens << 15) + (((int64_t)t_cps*dT) >> 8);
+	int32_t pressure = ( (pressure_digital*sens >> 21) - offset) >> 15;
+	return pressure;
 }

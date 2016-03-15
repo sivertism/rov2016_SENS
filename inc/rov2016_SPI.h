@@ -14,6 +14,7 @@
 #define SPI2_DR_8BIT					*((uint8_t*) 0x4000380D)
 
 /* Macros for the MS5803-14BA pressure sensor */
+/* Commands. */
 #define MS5803_RESET					0x1E
 #define MS5803_CONVERT_PRESSURE			0x48
 #define MS5803_CONVERT_TEMPERATURE		0x58
@@ -23,7 +24,9 @@
 /* Extern function prototypes ----------------------------------------------------------*/
 extern void SPI2_Init(void);
 extern void MS5803_Init(void);
-
+extern void MS5803_updateDigital(uint8_t sensor);
+extern int32_t MS5803_getTemperature();
+extern int32_t MS5803_getPressure();
 
 
 

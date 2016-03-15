@@ -20,6 +20,7 @@
 #include "rov2016_ADC.h"
 #include "rov2016_UART.h"
 #include "rov2016_Gyroscope.h"
+#include "rov2016_SPI.h"
 #include "MadgwickAHRS.h"
 //#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
@@ -61,6 +62,7 @@ uint8_t teller = 0;
 uint16_t val = 0;
 uint32_t valVoltage = 0;
 uint8_t timeStamp = 0;
+uint8_t olav = 1;
 
 void SysTick_Handler(void){
 	teller++;
@@ -86,6 +88,23 @@ void SysTick_Handler(void){
 	accelerometer_updateValue();
 	magnetometer_updateValue();
 	gyroscope_updateValue();
+
+
+	/* 10 Hz loop. */
+	if((teller>100) && kjor){
+		GPIOE->ODR ^= SYSTICK_LED << 8;
+		teller = 0;
+//		MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
+		CAN_transmitByte(POWR_COOLING_FAN_SWITCH,olav);
+		printf("Sent %d to address %d", olav, POWR_COOLING_FAN_SWITCH);
+		if(olav) olav = 0;
+		else olav = 1;
+
+//		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
+
+//		USART_matlab_visualizer_transmit((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
+//		USART_matlab_visualizer_transmit((int16_t)(ax), (int16_t)(ay), (int16_t)(az), (int16_t)(gz));
+//		USART_matlab_visualizer_transmit((int16_t)MS5803_getPressure(), 0,0,0);
 
 	if(kjor){
 		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
@@ -136,7 +155,7 @@ void SysTick_Handler(void){
 //		USART_matlab_visualizer_transmit((int16_t)(ax*10), (int16_t)(ay*10), (int16_t)(az*10), (int16_t)(0u));
 
 		/* Transmit g_x, g_y, g_z x10000 to matlab. */
-		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
+//		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
 
 		/* Transmit m_x, m_y, m_z x100 to matlab.*/
 //		USART_matlab_visualizer_transmit((int16_t)(mx*100), (int16_t)(my*100), (int16_t)(mz*100), (int16_t)(0u));
