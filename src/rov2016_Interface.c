@@ -30,7 +30,7 @@ static uint8_t dataBuffer[8] = {0};
 /**
  * @brief  Transmit SENSOR_AN_RAW package.
  * @param  None
- * @retval The number of unprocessed messages (uint8_t).
+ * @retval None
  */
 extern void CAN_transmit_AN_RAW(void){
 	dataBuffer[0] = (uint8_t) (ADC4_getChannel(0) & 0xFF);
@@ -47,7 +47,7 @@ extern void CAN_transmit_AN_RAW(void){
 
 /**
  * @brief  Transmit acceleration measurements in all 3 axes.
- * @param  Pointer to an array of dimension 6 containing measurements.
+ * @param  Array of dimension 6 containing measurements.
  * @retval None
  */
 extern void CAN_transmitAcceleration(int8_t acc_array){

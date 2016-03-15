@@ -30,7 +30,7 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
-static uint8_t kjor = 0, timestamp=0;
+static uint8_t kjor = 0;
 
 /* Private function declarations ---------------------------------------------------------------*/
 
@@ -59,9 +59,6 @@ void SysTick_init(void) {
  */
 
 uint8_t teller = 0;
-uint16_t val = 0;
-uint32_t valVoltage = 0;
-uint8_t timeStamp = 0;
 
 void SysTick_Handler(void){
 	teller++;
