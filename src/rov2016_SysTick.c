@@ -30,7 +30,7 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
-static uint8_t kjor = 0, timestamp=0;
+static uint8_t active = 0;
 
 /* Private function declarations ---------------------------------------------------------------*/
 
@@ -58,14 +58,10 @@ void SysTick_init(void) {
  * @retval None
  */
 
-uint8_t teller = 0;
-uint16_t val = 0;
-uint32_t valVoltage = 0;
-uint8_t timeStamp = 0;
-uint8_t olav = 1;
+uint8_t counter = 0;
 
 void SysTick_Handler(void){
-	teller++;
+	counter++;
 
 	/* Check for new message on CAN and update LEDs */
 	if(CAN_getRxMessages()>0){
@@ -76,11 +72,11 @@ void SysTick_Handler(void){
 	if (USART_getNewBytes()>0){
 		uint8_t melding = USART_getRxMessage();
 		if (melding == 'k') {
-			kjor = 1;
+			active = 1;
 			USART_transmit(USART2, 0x02); // STX
 		}
 		if (melding == 's'){
-			kjor = 0;
+			active = 0;
 			USART_transmit(USART2, 0x03); //ETX
 		}
 	}
@@ -91,14 +87,9 @@ void SysTick_Handler(void){
 
 
 	/* 10 Hz loop. */
-	if((teller>100) && kjor){
+	if((counter>100) && active){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
-		teller = 0;
-//		MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
-		CAN_transmitByte(POWR_COOLING_FAN_SWITCH,olav);
-		printf("Sent %d to address %d", olav, POWR_COOLING_FAN_SWITCH);
-		if(olav) olav = 0;
-		else olav = 1;
+		counter = 0;
 
 //		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
 
@@ -106,7 +97,7 @@ void SysTick_Handler(void){
 //		USART_matlab_visualizer_transmit((int16_t)(ax), (int16_t)(ay), (int16_t)(az), (int16_t)(gz));
 //		USART_matlab_visualizer_transmit((int16_t)MS5803_getPressure(), 0,0,0);
 
-	if(kjor){
+	if(active){
 		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
 		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
@@ -139,14 +130,12 @@ void SysTick_Handler(void){
 		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 	} // end if
 
-
-
-	if((teller>10) && kjor){
+	if((counter>10) && active){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
-		teller = 0;
+		counter = 0;
 
 		/* Transmit quaternions over CAN-bus. */
-		//		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
+//		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
 
 		/* Transmit q0...q3 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
@@ -163,5 +152,5 @@ void SysTick_Handler(void){
 		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
 	} // end if
-
+}
 } // end Systick_Handler()

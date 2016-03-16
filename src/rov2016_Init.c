@@ -24,7 +24,7 @@ extern void init(void){
 	GPIO_init();
 	USART2_init();
 //	SPI2_Init();
-	CAN_Config();
+	CAN_init();
 	accelerometer_init();
 	magnetometer_init();
 	gyroscope_init();
