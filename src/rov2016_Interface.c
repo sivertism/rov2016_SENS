@@ -46,7 +46,7 @@ extern void CAN_transmit_AN_RAW(void){
  * @param  Array of dimension 6 containing measurements.
  * @retval None
  */
-extern void CAN_transmitAcceleration(int8_t acc_array){
+extern void CAN_transmitAcceleration(uint8_t* acc_array){
 	CAN_transmitBuffer(SENSOR_ACCELERATION, acc_array, 6, CAN_ID_STD);
 }
 

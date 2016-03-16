@@ -51,7 +51,8 @@ void SPI2_IRQHandler(void){
 	if(isValid){
 		buffer[buffer_pos++] = SPI_ReceiveData8(SPI2);//SPI2->DR; // Read receive buffer.
 	} else {
-		uint8_t dummy = SPI_ReceiveData8(SPI2);//SPI2->DR;
+		uint8_t dummy;
+		dummy = SPI_ReceiveData8(SPI2);//SPI2->DR;
 	}
 	/* Interrupt should be automatically cleared by hardware. */
 }
