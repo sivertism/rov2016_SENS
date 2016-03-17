@@ -28,8 +28,7 @@ void ADC4_IRQHandler(void);
 void DMA1_Channel1_IRQHandler(void);
 void DMA2_Channel2_IRQHandler(void);
 uint8_t ADC_getValues(void);
-uint16_t ADC1_getChannel(uint8_t channel);
-uint16_t ADC4_getChannel(uint8_t channel);
+uint16_t ADC_getChannel(uint8_t channel);
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t new_values = 0;

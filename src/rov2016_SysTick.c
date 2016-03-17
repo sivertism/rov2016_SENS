@@ -21,6 +21,7 @@
 #include "rov2016_UART.h"
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
+#include "rov2016_Interface.h"
 #include "MadgwickAHRS.h"
 //#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
@@ -30,9 +31,13 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
-static uint8_t active = 0;
+static uint8_t active=0, counter_10_hz=0;
+static uint16_t counter_1_hz=0;
 
-/* Private function declarations ---------------------------------------------------------------*/
+/* Private function declarations -------------------------------------------------------*/
+
+/* Macro -------------------------------------------------------------------------------*/
+#define DEBUG_MODE
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -41,7 +46,7 @@ static uint8_t active = 0;
  * @param  None
  * @retval None
  */
-void SysTick_init(void) {
+extern void SysTick_init(void) {
 	NVIC_SetPriority(SysTick_IRQn, 1);
 	SysTick->CTRL = 0; /* Disable SysTick */
 	SysTick->LOAD = 72000000/100;  // 10 msek avbruddsintervall.
@@ -57,11 +62,9 @@ void SysTick_init(void) {
  * @param  None
  * @retval None
  */
-
-uint8_t counter = 0;
-
 void SysTick_Handler(void){
-	counter++;
+	counter_10_hz++;
+	counter_1_hz++;
 
 	/* Check for new message on CAN and update LEDs */
 	if(CAN_getRxMessages()>0){
@@ -85,19 +88,10 @@ void SysTick_Handler(void){
 	magnetometer_updateValue();
 	gyroscope_updateValue();
 
-
-	/* 10 Hz loop. */
-	if((counter>100) && active){
-		GPIOE->ODR ^= SYSTICK_LED << 8;
-		counter = 0;
-
-//		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
-
-//		USART_matlab_visualizer_transmit((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
-//		USART_matlab_visualizer_transmit((int16_t)(ax), (int16_t)(ay), (int16_t)(az), (int16_t)(gz));
-//		USART_matlab_visualizer_transmit((int16_t)MS5803_getPressure(), 0,0,0);
-
 	if(active){
+
+
+
 		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
 		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
@@ -130,9 +124,11 @@ void SysTick_Handler(void){
 		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 	} // end if
 
-	if((counter>10) && active){
+	if((counter_10_hz>9) && active){
 		GPIOE->ODR ^= SYSTICK_LED << 8;
-		counter = 0;
+		counter_10_hz = 0;
+
+//		GPIO_leakage_detector_disable();
 
 		/* Transmit quaternions over CAN-bus. */
 //		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
@@ -151,6 +147,14 @@ void SysTick_Handler(void){
 
 		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
-	} // end if
-}
+	} // end 10 hz loop.
+
+	if(counter_1_hz>999){
+#ifndef DEBUG_MODE
+		CAN_transmitAlive();
+#endif
+
+
+		counter_1_hz = 0;
+	}
 } // end Systick_Handler()
