@@ -15,7 +15,7 @@ int main(void){
 	init();
 	GPIOE->ODR = 0; // Turn off LED's
 	/* Private vars ***********************************************************/
-
+	printf("Init complete.");
 	/* Main loop *************************************************************/
 	while(1){
 		GPIOE->ODR ^= MAIN_LOOP_LED << 8;

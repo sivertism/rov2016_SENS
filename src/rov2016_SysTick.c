@@ -37,7 +37,7 @@ static uint16_t counter_1_hz=0;
 /* Private function declarations -------------------------------------------------------*/
 
 /* Macro -------------------------------------------------------------------------------*/
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -66,11 +66,6 @@ void SysTick_Handler(void){
 	counter_10_hz++;
 	counter_1_hz++;
 
-	/* Check for new message on CAN and update LEDs */
-	if(CAN_getRxMessages()>0){
-		GPIOE->ODR ^= (1u << CAN_getByteFromMessage(2,0)) << 8;
-	} // end if
-
 	/* Check for USART messages, start if 'k' */
 	if (USART_getNewBytes()>0){
 		uint8_t melding = USART_getRxMessage();
@@ -90,7 +85,11 @@ void SysTick_Handler(void){
 
 	if(active){
 
-
+		/* Check for messages from topside and set LED's accordingly. */
+//		if(CAN_getRxMessages()>0){
+//			uint8_t buttons_1 = CAN_getByteFromMessage(2,4);
+//			GPIOE->ODR = (uint16_t)buttons_1 << 8;
+//		}
 
 		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
@@ -125,7 +124,6 @@ void SysTick_Handler(void){
 	} // end if
 
 	if((counter_10_hz>9) && active){
-		GPIOE->ODR ^= SYSTICK_LED << 8;
 		counter_10_hz = 0;
 
 //		GPIO_leakage_detector_disable();
@@ -149,12 +147,11 @@ void SysTick_Handler(void){
 //		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
 	} // end 10 hz loop.
 
-	if(counter_1_hz>999){
+	if(counter_1_hz>99){
 #ifndef DEBUG_MODE
 		CAN_transmitAlive();
 #endif
-
-
+		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
 	}
 } // end Systick_Handler()

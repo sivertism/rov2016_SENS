@@ -49,7 +49,7 @@ void DMA1_Channel1_IRQHandler(){
 	new_values |= 0x1F;
 	DMA_ClearITPendingBit(DMA1_IT_TC1);
 	DMA_ClearFlag(DMA1_FLAG_TC1);
-	GPIOE->ODR ^= STATUS_LED7 << 8;
+//	GPIOE->ODR ^= STATUS_LED7 << 8;
 }
 
 /**
@@ -63,7 +63,7 @@ void DMA2_Channel2_IRQHandler(){
 	new_values |= (1u << 5);
 	DMA_ClearITPendingBit(DMA2_IT_TC2);
 	DMA_ClearFlag(DMA2_FLAG_TC2);
-	GPIOE->ODR ^= STATUS_LED6 << 8;
+//	GPIOE->ODR ^= STATUS_LED6 << 8;
 }
 
 /**
@@ -79,7 +79,7 @@ void ADC1_2_IRQHandler(void){
 		ADC_buffer[channel_counter] = (30000*ADC_GetConversionValue(ADC1))/4096;
 		/* Indicate to the main-loop that there is a new measurement available.*/
 		new_values |= (1u << channel_counter);
-		GPIOE->ODR ^= (STATUS_LED6 << 8);
+//		GPIOE->ODR ^= (STATUS_LED6 << 8);
 		/* Increment the channel counter */
 		channel_counter++;
 		if (channel_counter>3) channel_counter = 0;
@@ -87,7 +87,7 @@ void ADC1_2_IRQHandler(void){
 		GPIOF->ODR = 0;
 	}
 	if(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOS)){
-		GPIOE->ODR ^= (UART_TX_LED << 8);
+//		GPIOE->ODR ^= (UART_TX_LED << 8);
 		ADC_ClearFlag(ADC1, ADC_FLAG_EOS);
 	}
 	/* Reset ADC_FLAG_EOC to clear the interrupt request.*/
@@ -103,7 +103,7 @@ void ADC4_IRQHandler(void){
 	ADC_buffer[6] = (30000*ADC_GetConversionValue(ADC4))/4096;
 	/* Indicate to the main-loop that there is a new measurement available.*/
 	new_values |= (1u << 4);
-	GPIOE->ODR ^= (STATUS_LED7 << 8);
+//	GPIOE->ODR ^= (STATUS_LED7 << 8);
 	/* Reset ADC_FLAG_EOC to clear the interrupt request.*/
 	ADC_ClearFlag(ADC4, ADC_FLAG_EOC);
 } // end ADC3_IRQHandler()
