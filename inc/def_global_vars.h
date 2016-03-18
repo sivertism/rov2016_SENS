@@ -1,8 +1,10 @@
+/* CANBUS filter match indexes. (FMI) */
+volatile uint8_t topside_xbox_ctrl_fmi = 0;
+volatile uint8_t topside_xbox_axes_fmi = 0;
 /* Choice of axis in accelerometer_data */
 const uint8_t ACC_AXIS_X				= 0;
 const uint8_t ACC_AXIS_Y				= 1;
 const uint8_t ACC_AXIS_Z				= 2;
-
 
 /* Status LED's */
 const uint8_t MAIN_LOOP_LED				= (1u << 0);

@@ -86,10 +86,10 @@ void SysTick_Handler(void){
 	if(active){
 
 		/* Check for messages from topside and set LED's accordingly. */
-//		if(CAN_getRxMessages()>0){
-//			uint8_t buttons_1 = CAN_getByteFromMessage(2,4);
-//			GPIOE->ODR = (uint16_t)buttons_1 << 8;
-//		}
+		if(CAN_getRxMessages()>0){
+			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
+			GPIOE->ODR = (uint16_t)buttons_1 << 12;
+		}
 
 		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
