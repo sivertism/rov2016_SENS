@@ -54,7 +54,7 @@ static uint8_t hex2ascii_table[16] = {'0','1','2','3','4','5','6','7','8','9','A
 extern void USART2_IRQHandler(void){
 
 	/* Toggle status LED*/
-	GPIOE->ODR ^= UART_RX_LED << 8;
+//	GPIOE->ODR ^= UART_RX_LED << 8;
 
 	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET){
 		rx_buffer[rx_buffer_write_counter++] = USART_ReceiveData(USART2);
@@ -264,7 +264,7 @@ extern void USART3_init(void){
 extern void USART_transmit(USART_TypeDef* USARTx,uint8_t data){
 
 	/* Toggle status LED*/
-	GPIOE->ODR ^= UART_TX_LED << 8;
+//	GPIOE->ODR ^= UART_TX_LED << 8;
 
 	/* Wait for USART_TX not busy */
 	while(USART_GetFlagStatus(USARTx, USART_FLAG_BUSY) != RESET);

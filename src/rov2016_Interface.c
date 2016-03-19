@@ -21,6 +21,7 @@
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t dataBuffer[8] = {0};
+static uint8_t counter_alive = 0;
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
@@ -66,4 +67,14 @@ extern void CAN_transmitQuaternions(int16_t q0, int16_t q1, int16_t q2, int16_t 
 	dataBuffer[7] = (uint8_t)(q3 & 0xFF);
 
 	CAN_transmitBuffer(SENSOR_AHRS_QUATERNIONS, dataBuffer, 8, CAN_ID_STD);
+}
+
+/**
+ * @brief  Send alive-message over CAN-bus to topside. Should be called every ~1 second.
+ * @param  None
+ * @retval None
+ */
+extern void CAN_transmitAlive(void){
+	CAN_transmitByte(SENSOR_ALIVE, ++counter_alive);
+	if(counter_alive == 255) counter_alive = 0;
 }

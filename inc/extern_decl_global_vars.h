@@ -1,3 +1,7 @@
+/* CANBUS filter match indexes. (FMI) */
+volatile extern uint8_t topside_xbox_ctrl_fmi;
+volatile extern uint8_t topside_xbox_axes_fmi;
+
 /* Choice of axis in accelerometer_data */
 extern const uint8_t ACC_AXIS_X;
 extern const uint8_t ACC_AXIS_Y;
