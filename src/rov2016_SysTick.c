@@ -32,11 +32,11 @@
 #include "extern_decl_global_vars.h"
 
 /* Private variables -------------------------------------------------------------------*/
-static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0, my=0.0, mz=0.0;
-static float heading = 0.0f;
+static float gx=0.0f, gy=0.0f, gz=0.0f, mx=0.0, my=0.0, mz=0.0;
+static float heading = 0.0f, pitch=0.0f, roll=0.0f;
 static uint8_t active=0, counter_10_hz=0;
 static uint16_t counter_1_hz=0;
-
+static int16_t ax=0, ay=0, az=0;
 /* Private function declarations -------------------------------------------------------*/
 
 /* Macro -------------------------------------------------------------------------------*/
@@ -94,9 +94,9 @@ void SysTick_Handler(void){
 			GPIOE->ODR = (uint16_t)buttons_1 << 12;
 		}
 
-		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+		ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+		ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+		az = accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
 
 		mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
 		my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
@@ -105,18 +105,15 @@ void SysTick_Handler(void){
 		/* Calibration */
 		mx = (mx + 53.5)/558.5;
 		my = (my + 97.5)/601.5;
-		mz = (mz + 65.5)/581.5;
-
-		/* Compensate for sensitivity difference between magnetometer axes. */
-		mx /= LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
-		my /= LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
-		mz /= LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
+		mz = (mz + 65.5)/581.5;;
 
 		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
 		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
 		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
-		heading = AHRS_magnetometer_heading(mx, my, mz);
+
+
+
 //		heading = MCD_APP_TEAM_AHRS(ax,ay,az,mx,my,mz,gx,gy,gz);
 
 		/* Update AHRS (Attitude Heading Reference System. */
@@ -135,9 +132,7 @@ void SysTick_Handler(void){
 	} // end if
 
 	if((counter_10_hz>9)){
-#ifndef DEBUG_MODE
-		CAN_transmitAHRS(0, 0, 0, (uint16_t)(heading*10));
-#endif
+
 
 		counter_10_hz = 0;
 
@@ -166,6 +161,15 @@ void SysTick_Handler(void){
 	} // end 10 hz loop.
 
 	if(counter_1_hz>99){
+		pitch = AHRS_accelerometer_pitch(ax, ay, az);
+		roll = AHRS_accelerometer_roll(ay,az);
+		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
+
+#ifndef DEBUG_MODE
+		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
+#endif
+
+
 #ifndef DEBUG_MODE
 		CAN_transmitAlive();
 #endif

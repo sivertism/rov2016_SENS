@@ -101,7 +101,9 @@ extern float AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
 	float f_az_g = (float)az/1000.0;
 
 	float ayz_abs = sqrtf(f_ay_g*f_ay_g + f_az_g*f_az_g);
-	return -atan2f(f_ax_g, ayz_abs);
+
+	float pitch_rad = -atan2f(f_ax_g, ayz_abs);
+	return pitch_rad*180/PI;
 }
 
 /**
@@ -115,7 +117,78 @@ extern float AHRS_accelerometer_roll(int16_t ay, int16_t az){
 	float f_az_g = (float)az/1000.0;
 
 	if (f_az_g == 0) return 0.0f;
-	return atan2(f_ay_g, f_az_g);
+	return atan2(f_ay_g, f_az_g)*180/PI;
+}
+
+/**
+ * @brief  	Calculates tilt compensated heading.
+ * @param  	float pitch and roll.
+ * 			float mx, my, mz accelerometerdata in 3D.
+ * @retval 	Roll value in degrees.
+ */
+extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, float my, float mz){
+	/* Normalize magnetometer readings. */
+	float magnetometer_magnitude = sqrtf(mx*mx + my*my + mz*mz);
+	float mx_norm, my_norm, mz_norm;
+	mx_norm = mx/magnetometer_magnitude;
+	my_norm = my/magnetometer_magnitude;
+	mz_norm = mz/magnetometer_magnitude;
+
+	/* Calculate tilt compensated magnetic sensor measurements mx_2, my_2, mz_2 based on eq. 12 from
+	 * STM's AN3192, Appendix A.2.
+	 */
+	float sinpitch = sinf(pitch*PI/180);
+	float cospitch = cosf(pitch*PI/180);
+	float sinroll = sinf(roll*PI/180);
+	float cosroll = cosf(roll*PI/180);
+
+	float mx_2, my_2, mz_2;
+	mx_2 = mx_norm*cospitch + mz_norm*sinpitch;
+	my_2 = mx_norm*sinroll*sinpitch + my_norm*cosroll - mz_norm*sinroll*cospitch;
+	mz_2 = -mx_norm*cosroll*sinpitch + my_norm*sinroll + mz_norm*cosroll*cospitch;
+
+	/* Find quadrant. */
+	quadrant quad = QUADRANT_1;
+	if(mx_2 > 0){
+		if (my_2 > 0){
+			quad = QUADRANT_1;
+		} else {
+			quad = QUADRANT_4;
+		}
+	} else {
+		if (my_2 > 0){
+			quad = QUADRANT_2;
+		} else {
+			quad = QUADRANT_3;
+		}
+	}
+
+	/* Calculate tilt compensated heading based on eqn 13 from STM's AN3192, Appendix A.2. */
+	float heading = -2;
+	switch(quad){
+	case QUADRANT_1:
+		heading = atan(my_2/mx_2);
+		break;
+	case QUADRANT_2:
+		heading = atan(my_2/mx_2)+ PI;
+		break;
+	case QUADRANT_3:
+		heading = atan(my_2/mx_2) + PI;
+		break;
+	case QUADRANT_4:
+		heading = atan(my/mx) + 2*PI;
+		break;
+	default:
+		heading = -2.0f;
+	}
+
+	/* Rad -> deg */
+	heading = heading*180/PI;
+
+	if((mx_2 == 0) && (my_2<0)) heading = 90.0;
+	if((mx_2 == 0) && (my_2>0)) heading = 270.0;
+
+	return heading;
 }
 
 extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz){

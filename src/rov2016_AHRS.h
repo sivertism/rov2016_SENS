@@ -18,3 +18,4 @@ float AHRS_magnetometer_heading(float mx, float my, float mz);
 extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz);
 extern float AHRS_accelerometer_roll(int16_t ay, int16_t az);
 extern float AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az);
+extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, float my, float mz);
