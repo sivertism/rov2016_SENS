@@ -84,7 +84,7 @@ extern void CAN_transmitAlive(void){
  * @param  Pitch, roll, yaw, heading in 0.1 degrees.
  * @retval None
  */
-extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw,int16_t heading){
+extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t heading){
 	dataBuffer[0] = (uint8_t)(pitch >> 8u);
 	dataBuffer[1] = (uint8_t)(pitch & 0xFF);
 	dataBuffer[2] = (uint8_t)(roll >> 8u);

@@ -14,5 +14,5 @@
 /* Extern variables --------------------------------------------------------------------*/
 
 /* Exported function prototypes --------------------------------------------------------*/
-float magnetometer_heading(float mx, float my, float mz);
+float AHRS_magnetometer_heading(float mx, float my, float mz);
 extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz);

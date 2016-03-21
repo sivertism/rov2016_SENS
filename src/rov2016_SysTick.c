@@ -86,7 +86,7 @@ void SysTick_Handler(void){
 	magnetometer_updateValue();
 	gyroscope_updateValue();
 
-	if(active){
+	if(1){
 
 		/* Check for messages from topside and set LED's accordingly. */
 		if(CAN_getRxMessages()>0){
@@ -116,14 +116,14 @@ void SysTick_Handler(void){
 		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
 		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
-		heading = magnetometer_heading(mx, my, mz);
+		heading = AHRS_magnetometer_heading(mx, my, mz);
 //		heading = MCD_APP_TEAM_AHRS(ax,ay,az,mx,my,mz,gx,gy,gz);
 
 		/* Update AHRS (Attitude Heading Reference System. */
 //		MadgwickAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
 
 		/* From testing. */
-		MadgwickAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
+//		MadgwickAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
 //		MahonyAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
 
 		/* From MCD application team. */
@@ -134,7 +134,11 @@ void SysTick_Handler(void){
 		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 	} // end if
 
-	if((counter_10_hz>9) && active){
+	if((counter_10_hz>9)){
+#ifndef DEBUG_MODE
+		CAN_transmitAHRS(0, 0, 0, (uint16_t)(heading*10));
+#endif
+
 		counter_10_hz = 0;
 
 //		GPIO_leakage_detector_disable();

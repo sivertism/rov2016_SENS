@@ -38,7 +38,7 @@ typedef enum{
  * @retval 	Heading in degrees of clockwise rotation arround the z-axis
  * 			referenced to north. Return value of -1 indicates an error.
  */
-float magnetometer_heading(float mx, float my, float mz){
+float AHRS_magnetometer_heading(float mx, float my, float mz){
 
 	/* Find quadrant. */
 	quadrant quad = QUADRANT_1;
@@ -78,7 +78,27 @@ float magnetometer_heading(float mx, float my, float mz){
 
 	/* Convert to degrees. */
 	heading *= 180.0/PI;
+
+	/* Correct for south/north error.*/
+	if(heading<180){
+		heading = heading + 180;
+	} else {
+		heading = heading -180;
+	}
+
 	return heading;
+}
+
+/**
+ * @brief  	Calculates heading based on 3D magnetometer data.
+ * @param  	int16_t mx, my, mz magnetometer data in 3D.
+ * @retval 	Heading in degrees of clockwise rotation arround the z-axis
+ * 			referenced to north. Return value of -1 indicates an error.
+ */
+
+extern float AHRS_accelerometer_pitch(float ax, float ay, float az){
+	float ayz_abs = sqrtf(ay*ay + az*az);
+	return -atan2f(ax, ayz_abs);
 }
 
 extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz){
