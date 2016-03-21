@@ -1,0 +1,165 @@
+/**
+ **************************************************************************************
+ * @file    rov2016_AHRS.c
+ * @author  Sivert Sliper, Stian Soerensen
+ * @version V1.0
+ * @date    3-February-2016
+ * @brief   This file contains functions for implementing a Attitude Heading Reference
+ * 			System based on 3 dimensional accelerometer, magnetometer and gyroscope
+ * 			sensors.
+ **************************************************************************************
+ */
+
+/* Include------------------------------------------------------------------------------*/
+#include "stm32f30x.h"
+#include "math.h"
+
+/* Global variables --------------------------------------------------------------------*/
+#include "extern_decl_global_vars.h"
+
+/* Static Function declarations --------------------------------------------------------*/
+//float magnetometer_heading(int16_t mx, int16_t my, int16_t mz);
+
+/* Private variables -------------------------------------------------------------------*/
+typedef enum{
+	QUADRANT_1, 		// X>0, Y>0
+	QUADRANT_2,			// X<0, Y>0
+	QUADRANT_3,			// X<0, Y<0
+	QUADRANT_4,			// X>0, Y<0
+} quadrant;
+
+/* Macro ----------------------------------------------------------------*/
+#define PI				3.14159265f
+/* Function definitions ----------------------------------------------------------------*/
+
+/**
+ * @brief  	Calculates heading based on 3D magnetometer data.
+ * @param  	int16_t mx, my, mz magnetometer data in 3D.
+ * @retval 	Heading in degrees of clockwise rotation arround the z-axis
+ * 			referenced to north. Return value of -1 indicates an error.
+ */
+float magnetometer_heading(float mx, float my, float mz){
+
+	/* Find quadrant. */
+	quadrant quad = QUADRANT_1;
+	if(mx > 0){
+		if (my > 0){
+			quad = QUADRANT_1;
+		} else {
+			quad = QUADRANT_4;
+		}
+	} else {
+		if (my > 0){
+			quad = QUADRANT_2;
+		} else {
+			quad = QUADRANT_3;
+		}
+	}
+
+	/* Step 3: Calculate heading angle */
+	float heading = -1.0f;
+
+	switch(quad){
+	case QUADRANT_1:
+		heading = atan(my/mx);
+		break;
+	case QUADRANT_2:
+		heading = atan(my/mx)+ PI;
+		break;
+	case QUADRANT_3:
+		heading = atan(my/mx) + PI;
+		break;
+	case QUADRANT_4:
+		heading = atan(my/mx) + 2*PI;
+		break;
+	default:
+		heading = -2.0f;
+	}
+
+	/* Convert to degrees. */
+	heading *= 180.0/PI;
+	return heading;
+}
+
+extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz){
+
+	float fNormAcc,fSinRoll,fCosRoll,fSinPitch,fCosPitch = 0.0f, RollAng = 0.0f, PitchAng = 0.0f;
+	float fTiltedX,fTiltedY = 0.0f;
+	volatile float HeadingValue = 0.0f;
+
+	ax = ax/100.0;
+	ay = ay/100.0;
+	az = az/100.0;
+    fNormAcc = sqrt((ax*ax)+(ay*ay)+(ay*ay));
+
+    fSinRoll = -ay/fNormAcc;
+    fCosRoll = sqrt(1.0-(fSinRoll * fSinRoll));
+    fSinPitch = ax/fNormAcc;
+    fCosPitch = sqrt(1.0-(fSinPitch * fSinPitch));
+   if ( fSinRoll >0)
+   {
+     if (fCosRoll>0)
+     {
+       RollAng = acos(fCosRoll)*180/PI;
+     }
+     else
+     {
+       RollAng = acos(fCosRoll)*180/PI + 180;
+     }
+   }
+   else
+   {
+     if (fCosRoll>0)
+     {
+       RollAng = acos(fCosRoll)*180/PI + 360;
+     }
+     else
+     {
+       RollAng = acos(fCosRoll)*180/PI + 180;
+     }
+   }
+
+    if ( fSinPitch >0)
+   {
+     if (fCosPitch>0)
+     {
+          PitchAng = acos(fCosPitch)*180/PI;
+     }
+     else
+     {
+        PitchAng = acos(fCosPitch)*180/PI + 180;
+     }
+   }
+   else
+   {
+     if (fCosPitch>0)
+     {
+          PitchAng = acos(fCosPitch)*180/PI + 360;
+     }
+     else
+     {
+        PitchAng = acos(fCosPitch)*180/PI + 180;
+     }
+   }
+
+    if (RollAng >=360)
+    {
+      RollAng = RollAng - 360;
+    }
+
+    if (PitchAng >=360)
+    {
+      PitchAng = PitchAng - 360;
+    }
+
+    fTiltedX = mx*fCosPitch+mz*fSinPitch;
+    fTiltedY = mx*fSinRoll*fSinPitch+my*fCosRoll-my*fSinRoll*fCosPitch;
+
+    HeadingValue = (float) ((atan2f((float)fTiltedY,(float)fTiltedX))*180)/PI;
+
+    if (HeadingValue < 0)
+    {
+      HeadingValue = HeadingValue + 360;
+    }
+    return HeadingValue;
+}

@@ -25,12 +25,15 @@
 #include "MadgwickAHRS.h"
 //#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
+#include "rov2016_AHRS.h"
+#include "math.h"
 
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
 
 /* Private variables -------------------------------------------------------------------*/
-static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
+static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0, my=0.0, mz=0.0;
+static float heading = 0.0f;
 static uint8_t active=0, counter_10_hz=0;
 static uint16_t counter_1_hz=0;
 
@@ -95,18 +98,26 @@ void SysTick_Handler(void){
 		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
 		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
 
-		mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS));
-		my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
-		mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+		mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
+		my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
+		mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
+
+		/* Calibration */
+		mx = (mx + 53.5)/558.5;
+		my = (my + 97.5)/601.5;
+		mz = (mz + 65.5)/581.5;
 
 		/* Compensate for sensitivity difference between magnetometer axes. */
-		mx /= 9.8f;
-		my /= 9.8f;
-		mz /= 11.0f;
+		mx /= LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
+		my /= LSM303DLHC_M_SENSITIVITY_XY_1_3Ga;
+		mz /= LSM303DLHC_M_SENSITIVITY_Z_1_3Ga;
 
 		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
 		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
 		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
+
+		heading = magnetometer_heading(mx, my, mz);
+//		heading = MCD_APP_TEAM_AHRS(ax,ay,az,mx,my,mz,gx,gy,gz);
 
 		/* Update AHRS (Attitude Heading Reference System. */
 //		MadgwickAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
@@ -140,8 +151,11 @@ void SysTick_Handler(void){
 		/* Transmit g_x, g_y, g_z x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
 
-		/* Transmit m_x, m_y, m_z x100 to matlab.*/
-//		USART_matlab_visualizer_transmit((int16_t)(mx*100), (int16_t)(my*100), (int16_t)(mz*100), (int16_t)(0u));
+		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
+//		USART_matlab_visualizer_transmit((int16_t)(mx), (int16_t)(my), (int16_t)(mz), (int16_t)(0u));
+
+		/* Transmit heading to matlab. */
+//		USART_matlab_visualizer_transmit((int16_t)(heading*10.0),0,0,0);
 
 		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));

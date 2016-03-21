@@ -78,3 +78,21 @@ extern void CAN_transmitAlive(void){
 	CAN_transmitByte(SENSOR_ALIVE, ++counter_alive);
 	if(counter_alive == 255) counter_alive = 0;
 }
+
+/**
+ * @brief  Send pitch, roll, yaw and heading to topside system.
+ * @param  Pitch, roll, yaw, heading in 0.1 degrees.
+ * @retval None
+ */
+extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw,int16_t heading){
+	dataBuffer[0] = (uint8_t)(pitch >> 8u);
+	dataBuffer[1] = (uint8_t)(pitch & 0xFF);
+	dataBuffer[2] = (uint8_t)(roll >> 8u);
+	dataBuffer[3] = (uint8_t)(roll & 0xFF);
+	dataBuffer[4] = (uint8_t)(yaw >> 8u);
+	dataBuffer[5] = (uint8_t)(yaw & 0xFF);
+	dataBuffer[6] = (uint8_t)(heading >> 8u);
+	dataBuffer[7] = (uint8_t)(heading & 0xFF);
+
+	CAN_transmitBuffer(SENSOR_AHRS, dataBuffer, 8, CAN_ID_STD);
+}
