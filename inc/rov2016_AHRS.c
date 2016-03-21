@@ -90,15 +90,32 @@ float AHRS_magnetometer_heading(float mx, float my, float mz){
 }
 
 /**
- * @brief  	Calculates heading based on 3D magnetometer data.
- * @param  	int16_t mx, my, mz magnetometer data in 3D.
- * @retval 	Heading in degrees of clockwise rotation arround the z-axis
- * 			referenced to north. Return value of -1 indicates an error.
+ * @brief  	Calculates pitch based on 3D accelerometer data.
+ * @param  	int16_t ax, ay, az accelerometerdata in 3D.
+ * @retval 	Pitch value in degrees.
  */
 
-extern float AHRS_accelerometer_pitch(float ax, float ay, float az){
-	float ayz_abs = sqrtf(ay*ay + az*az);
-	return -atan2f(ax, ayz_abs);
+extern float AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
+	float f_ax_g = (float)ax/1000.0;
+	float f_ay_g = (float)ay/1000.0;
+	float f_az_g = (float)az/1000.0;
+
+	float ayz_abs = sqrtf(f_ay_g*f_ay_g + f_az_g*f_az_g);
+	return -atan2f(f_ax_g, ayz_abs);
+}
+
+/**
+ * @brief  	Calculates roll based on 3D accelerometer data.
+ * @param  	int16_t ay, az accelerometerdata in 3D.
+ * @retval 	Roll value in degrees.
+ */
+
+extern float AHRS_accelerometer_roll(int16_t ay, int16_t az){
+	float f_ay_g = (float)ay/1000.0;
+	float f_az_g = (float)az/1000.0;
+
+	if (f_az_g == 0) return 0.0f;
+	return atan2(f_ay_g, f_az_g);
 }
 
 extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz){
