@@ -22,18 +22,22 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_Interface.h"
+#include "rov2016_REG.h"
 #include "MadgwickAHRS.h"
+#include "rov2016_AHRS.h"
 //#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
+#include "math.h"
 
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
 
 /* Private variables -------------------------------------------------------------------*/
-static float gx=0.0f, gy=0.0f, gz=0.0f, ax=0.0f, ay=0.0f, az=0.0f, mx=0.0f, my=0.0f, mz=0.0f;
-static uint8_t active=0, counter_10_hz=0;
+static float gx=0.0f, gy=0.0f, gz=0.0f, mx=0.0, my=0.0, mz=0.0;
+static float heading = 0.0f, pitch=0.0f, roll=0.0f;
+static uint8_t isActive=0, counter_10_hz=0;
 static uint16_t counter_1_hz=0;
-
+static int16_t ax=0, ay=0, az=0;
 /* Private function declarations -------------------------------------------------------*/
 
 /* Macro -------------------------------------------------------------------------------*/
@@ -70,11 +74,11 @@ void SysTick_Handler(void){
 	if (USART_getNewBytes()>0){
 		uint8_t melding = USART_getRxMessage();
 		if (melding == 'k') {
-			active = 1;
+			isActive = 1;
 			USART_transmit(USART2, 0x02); // STX
 		}
 		if (melding == 's'){
-			active = 0;
+			isActive = 0;
 			USART_transmit(USART2, 0x03); //ETX
 		}
 	}
@@ -83,36 +87,41 @@ void SysTick_Handler(void){
 	magnetometer_updateValue();
 	gyroscope_updateValue();
 
-	if(active){
+	if(1){
 
 		/* Check for messages from topside and set LED's accordingly. */
 		if(CAN_getRxMessages()>0){
-			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
-			GPIOE->ODR = (uint16_t)buttons_1 << 12;
+//			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
+//			GPIOE->ODR = (uint16_t)buttons_1 << 12;
 		}
 
-		ax = (float)accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-		ay = (float)accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-		az = (float)accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+		ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+		ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+		az = accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
 
-		mx = ((float)magnetometer_getRawData(MAGNETOMETER_X_AXIS));
-		my = ((float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS));
-		mz = ((float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS));
+		mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
+		my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
+		mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
 
-		/* Compensate for sensitivity difference between magnetometer axes. */
-		mx /= 9.8f;
-		my /= 9.8f;
-		mz /= 11.0f;
+		/* Calibration */
+		mx = (mx + 53.5)/558.5;
+		my = (my + 97.5)/601.5;
+		mz = (mz + 65.5)/581.5;;
 
 		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
 		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
 		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
 
+
+
+
+//		heading = MCD_APP_TEAM_AHRS(ax,ay,az,mx,my,mz,gx,gy,gz);
+
 		/* Update AHRS (Attitude Heading Reference System. */
 //		MadgwickAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
 
 		/* From testing. */
-		MadgwickAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
+//		MadgwickAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
 //		MahonyAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
 
 		/* From MCD application team. */
@@ -123,7 +132,14 @@ void SysTick_Handler(void){
 		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 	} // end if
 
-	if((counter_10_hz>9) && active){
+	/* 10 Hz loop */
+	if((counter_10_hz>9)){
+
+		int16_t* controller_vals = Interface_readController();
+//		USART_matlab_visualizer_transmit(controller_vals[0], controller_vals[2], controller_vals[3], controller_vals[4]);
+		Interface_transmitManualThrust();
+//		VESC_setDutyCycle(1, 0.1);
+
 		counter_10_hz = 0;
 
 //		GPIO_leakage_detector_disable();
@@ -140,18 +156,30 @@ void SysTick_Handler(void){
 		/* Transmit g_x, g_y, g_z x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
 
-		/* Transmit m_x, m_y, m_z x100 to matlab.*/
-//		USART_matlab_visualizer_transmit((int16_t)(mx*100), (int16_t)(my*100), (int16_t)(mz*100), (int16_t)(0u));
+		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
+//		USART_matlab_visualizer_transmit((int16_t)(mx), (int16_t)(my), (int16_t)(mz), (int16_t)(0u));
+
+		/* Transmit heading to matlab. */
+//		USART_matlab_visualizer_transmit((int16_t)(heading*10.0),0,0,0);
+
+		/* Transmit joystick to matlab. */
+
 
 		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
 	} // end 10 hz loop.
 
+
+	/* 1 Hz loop */
 	if(counter_1_hz>99){
-#ifndef DEBUG_MODE
+		pitch = AHRS_accelerometer_pitch(ax, ay, az);
+		roll = AHRS_accelerometer_roll(ay,az);
+		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
+
+		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
 		CAN_transmitAlive();
-#endif
+
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
-	}
+	}// end 1 Hz loop.
 } // end Systick_Handler()
