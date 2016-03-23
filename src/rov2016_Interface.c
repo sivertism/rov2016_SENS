@@ -16,12 +16,16 @@
 #include "stm32f30x_rcc.h"
 #include "stm32f30x_gpio.h"
 #include "stm32f30x_misc.h"
+#include <stdlib.h>
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
+extern int16_t controller_data[7] = {0};
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t dataBuffer[8] = {0};
 static uint8_t counter_alive = 0;
+
+
 
 typedef enum {
 	CAN_PACKET_SET_DUTY = 0,
@@ -118,7 +122,7 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
  * 					DUTY_CYCLE_MAX.
  * @retval 	None
  */
-void VESC_setDutyCycle(uint8_t esc_id, float duty){
+extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 	/* Regn ut ID
 	 * skaler float x 10 000
 	 * legg float inn i 4 byte array
@@ -132,7 +136,7 @@ void VESC_setDutyCycle(uint8_t esc_id, float duty){
 
 	uint32_t id = (uint32_t)(CAN_PACKET_SET_DUTY << 8) | esc_id;
 
-	uint32_t temp_duty = (uint32_t)(duty * 10000.0f);
+	int32_t temp_duty = (int32_t)(duty * 100000.0f);
 
 	uint8_t buffer[4];
 	buffer[0] = temp_duty >> 24;	// MSB(Most significant byte).
@@ -141,4 +145,172 @@ void VESC_setDutyCycle(uint8_t esc_id, float duty){
 	buffer[3] = temp_duty;			// LSB(Least significant byte).
 
 	CAN_transmitBuffer(id, buffer, 4, CAN_ID_TYPE_EXT);
+}
+
+/**
+ * @brief  	Calculates tilt compensated heading.
+ * 			Button/axes mapping:
+ * 				0. Left trigger:			Depth -
+ * 				1. Right trigger:			Depth +
+ * 				2. Left stick L/R:			Sway
+ * 				3. Left stick fwd/back:		Surge
+ * 				4. Right stick L/R:			Roll
+ * 				5. Right stick fwd/back:	Pitch
+ * 				6. Bumpers L/R				Yaw
+ * @param  	Pointer to controller CAN-messages.
+ * @retval 	int16_t array containing controller data.
+ */
+extern int16_t* Interface_readController(){
+	/* Read messages from CAN receive buffer */
+	uint8_t* controller_package1 = CAN_getMessagePointer(TOP_XBOX_CTRLS);
+	uint8_t* controller_package2 = CAN_getMessagePointer(TOP_XBOX_AXES);
+
+
+
+	/* Left trigger */
+	controller_data[0] = (int16_t)( (int16_t)controller_package1[5] << 8 ) | controller_package1[4];
+	controller_data[0] += 1000; // range-> 0-2000
+
+	/* Right trigger */
+	controller_data[1] = (int16_t)( (int16_t)controller_package2[3] << 8) | controller_package2[2];
+	controller_data[1] += 1000; // range-> 0-2000
+
+	/* Left stick left/right*/
+	controller_data[2] = (int16_t)( (int16_t)controller_package1[1] << 8) | controller_package1[0];
+
+	/* Left stick fwd/back */
+	controller_data[3] = (int16_t)( (int16_t)controller_package1[3] << 8) | controller_package1[2];
+
+	/* Right stick left/right */
+	controller_data[4] = (int16_t)( (int16_t)controller_package1[7] << 8) | controller_package1[6];
+
+	/* Right stick fwd/back */
+	controller_data[5] = (int16_t)( (int16_t)controller_package2[1] << 8) | controller_package2[0];
+
+	/* Bumpers */
+	if (controller_package2[4] & 0x10){
+		/* Left bumper pressed -> counterclockwise rotation. */
+		controller_data[6] = -1;
+	} else if (controller_package2[4] & 0x20){
+		/* Right bumper pressed -> clockwise rotation. */
+		controller_data[6] = 1;
+	} else {
+		/* No bumpers pressed */
+		controller_data[6] = 0;
+	}
+
+	return controller_data;
+}
+
+/**
+ * @brief  	Sends thrust to motorcontrollers.
+ * 			Button/axes mapping:
+ * 				0. Left trigger:			Depth -
+ * 				1. Right trigger:			Depth +
+ * 				2. Left stick L/R:			Sway
+ * 				3. Left stick fwd/back:		Surge
+ * 				4. Right stick L/R:			Roll
+ * 				5. Right stick fwd/back:	Pitch
+ * 				6. Bumpers L/R				Yaw
+ * @param  	Pointer to controller CAN-messages.
+ * @retval 	int16_t array containing controller data.
+ */
+extern void Interface_transmitManualThrust(void){
+	float th1=0.0, th2=0.0, th3=0.0, th4=0.0, th5=0.0, th6=0.0, th7=0.0, th8=0.0;
+
+
+	/* Thruster 1-4 (up-/downwards thrust) **********************************************************/
+	float downthrust = (float)controller_data[0]/2000.0;
+	th1 -= downthrust;
+	th2 -= downthrust;
+	th3 -= downthrust;
+	th4 -= downthrust;
+
+	float upthrust = (float)controller_data[1]/2000.0;
+	th1 += upthrust;
+	th2 += upthrust;
+	th3 += upthrust;
+	th4 += upthrust;
+
+	float rollthrust = (float)controller_data[4]/1000.0;
+	th1 -= rollthrust;
+	th2 -= rollthrust;
+	th3 += rollthrust;
+	th4 += rollthrust;
+
+	float pitchthrust = (float)controller_data[5]/1000.0;
+	th1 += pitchthrust;
+	th2 -= pitchthrust;
+	th3 += pitchthrust;
+	th4 -= pitchthrust;
+
+	/* Thruster 5-8 (sideways thrust) ***************************************************************/
+	float swaythrust = (float)controller_data[2]/1000.0;
+	th5 -= swaythrust;
+	th6 += swaythrust;
+	th7 -= swaythrust;
+	th8 += swaythrust;
+
+	float surgethrust = (float)controller_data[3]/1000.0;
+	th5 -= surgethrust;
+	th6 -= surgethrust;
+	th7 -= surgethrust;
+	th8 -= surgethrust;
+
+	float yawthrust = (float)controller_data[6];
+	th5 -= yawthrust;
+	th6 -= yawthrust;
+	th7 += yawthrust;
+	th8 += yawthrust;
+
+	/* Normalize if multiple axes active. **********************************************************/
+
+	/* Search for largest thrust value. */
+	float maxthrust_up_down = 0.95f;
+	float maxthrust_sideways = 0.95f;
+
+	if(maxthrust_up_down > abs(th1)) maxthrust_up_down = abs(th1);
+	if(maxthrust_up_down > abs(th2)) maxthrust_up_down = abs(th2);
+	if(maxthrust_up_down > abs(th3)) maxthrust_up_down = abs(th3);
+	if(maxthrust_up_down > abs(th4)) maxthrust_up_down = abs(th4);
+
+	if(maxthrust_sideways > abs(th5)) maxthrust_sideways = abs(th5);
+	if(maxthrust_sideways > abs(th6)) maxthrust_sideways = abs(th6);
+	if(maxthrust_sideways > abs(th7)) maxthrust_sideways = abs(th7);
+	if(maxthrust_sideways > abs(th8)) maxthrust_sideways = abs(th8);
+
+	if(maxthrust_up_down > 1){
+		th1 = th1/maxthrust_up_down - 0.06;
+		th2 = th2/maxthrust_up_down - 0.06;
+		th3 = th3/maxthrust_up_down - 0.06;
+		th4 = th4/maxthrust_up_down - 0.06;
+	} else if (maxthrust_up_down > 0.95){
+		th1 -= 0.06;
+		th2 -= 0.06;
+		th3 -= 0.06;
+		th4 -= 0.06;
+	}
+
+	if(maxthrust_sideways > 1){
+		th5 = th5/maxthrust_sideways - 0.06;
+		th6 = th6/maxthrust_sideways - 0.06;
+		th7 = th7/maxthrust_sideways - 0.06;
+		th8 = th8/maxthrust_sideways - 0.06;
+	} else if (maxthrust_sideways > 0.95){
+		th5 -= 0.06;
+		th6 -= 0.06;
+		th7 -= 0.06;
+		th8 -= 0.06;
+	}
+
+	/* Send thrust to ESC's. */
+	VESC_setDutyCycle(1, th1);
+	VESC_setDutyCycle(2, th2);
+	VESC_setDutyCycle(3, th3);
+	VESC_setDutyCycle(4, th4);
+
+	VESC_setDutyCycle(5, th5);
+	VESC_setDutyCycle(6, th6);
+	VESC_setDutyCycle(7, th7);
+	VESC_setDutyCycle(8, th8);
 }

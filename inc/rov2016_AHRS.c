@@ -142,10 +142,10 @@ extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, fl
 	float sinroll = sinf(roll*PI/180);
 	float cosroll = cosf(roll*PI/180);
 
-	float mx_2, my_2, mz_2;
+	float mx_2, my_2;
 	mx_2 = mx_norm*cospitch + mz_norm*sinpitch;
 	my_2 = mx_norm*sinroll*sinpitch + my_norm*cosroll - mz_norm*sinroll*cospitch;
-	mz_2 = -mx_norm*cosroll*sinpitch + my_norm*sinroll + mz_norm*cosroll*cospitch;
+//	mz_2 = -mx_norm*cosroll*sinpitch + my_norm*sinroll + mz_norm*cosroll*cospitch;
 
 	/* Find quadrant. */
 	quadrant quad = QUADRANT_1;

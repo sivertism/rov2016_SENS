@@ -22,10 +22,11 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_Interface.h"
+#include "rov2016_REG.h"
 #include "MadgwickAHRS.h"
+#include "rov2016_AHRS.h"
 //#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
-#include "rov2016_AHRS.h"
 #include "math.h"
 
 /* Global variables --------------------------------------------------------------------*/
@@ -34,7 +35,7 @@
 /* Private variables -------------------------------------------------------------------*/
 static float gx=0.0f, gy=0.0f, gz=0.0f, mx=0.0, my=0.0, mz=0.0;
 static float heading = 0.0f, pitch=0.0f, roll=0.0f;
-static uint8_t active=0, counter_10_hz=0;
+static uint8_t isActive=0, counter_10_hz=0;
 static uint16_t counter_1_hz=0;
 static int16_t ax=0, ay=0, az=0;
 /* Private function declarations -------------------------------------------------------*/
@@ -73,11 +74,11 @@ void SysTick_Handler(void){
 	if (USART_getNewBytes()>0){
 		uint8_t melding = USART_getRxMessage();
 		if (melding == 'k') {
-			active = 1;
+			isActive = 1;
 			USART_transmit(USART2, 0x02); // STX
 		}
 		if (melding == 's'){
-			active = 0;
+			isActive = 0;
 			USART_transmit(USART2, 0x03); //ETX
 		}
 	}
@@ -90,8 +91,8 @@ void SysTick_Handler(void){
 
 		/* Check for messages from topside and set LED's accordingly. */
 		if(CAN_getRxMessages()>0){
-			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
-			GPIOE->ODR = (uint16_t)buttons_1 << 12;
+//			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
+//			GPIOE->ODR = (uint16_t)buttons_1 << 12;
 		}
 
 		ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
@@ -131,8 +132,13 @@ void SysTick_Handler(void){
 		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
 	} // end if
 
+	/* 10 Hz loop */
 	if((counter_10_hz>9)){
 
+		int16_t* controller_vals = Interface_readController();
+//		USART_matlab_visualizer_transmit(controller_vals[0], controller_vals[2], controller_vals[3], controller_vals[4]);
+		Interface_transmitManualThrust();
+//		VESC_setDutyCycle(1, 0.1);
 
 		counter_10_hz = 0;
 
@@ -156,24 +162,24 @@ void SysTick_Handler(void){
 		/* Transmit heading to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(heading*10.0),0,0,0);
 
+		/* Transmit joystick to matlab. */
+
+
 		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
 	} // end 10 hz loop.
 
+
+	/* 1 Hz loop */
 	if(counter_1_hz>99){
 		pitch = AHRS_accelerometer_pitch(ax, ay, az);
 		roll = AHRS_accelerometer_roll(ay,az);
 		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 
-#ifndef DEBUG_MODE
 		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
-#endif
-
-
-#ifndef DEBUG_MODE
 		CAN_transmitAlive();
-#endif
+
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
-	}
+	}// end 1 Hz loop.
 } // end Systick_Handler()

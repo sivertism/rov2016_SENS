@@ -36,6 +36,10 @@ extern void CAN_transmitQuaternions(int16_t q0, int16_t q1, int16_t q2, int16_t 
 extern void CAN_transmitAcceleration(uint8_t* acc_array);
 extern void CAN_transmit_AN_RAW(void);
 extern void CAN_transmitAlive(void);
+extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t heading);
+extern int16_t* Interface_readController();
+
 
 /* VESC interface */
-VESC_setDutyCycle(uint8_t esc_id, float duty)
+extern void VESC_setDutyCycle(uint8_t esc_id, float duty);
+extern void Interface_transmitManualThrust(void);
