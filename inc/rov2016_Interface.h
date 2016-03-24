@@ -43,3 +43,4 @@ extern int16_t* Interface_readController();
 /* VESC interface */
 extern void VESC_setDutyCycle(uint8_t esc_id, float duty);
 extern void Interface_transmitManualThrust(void);
+extern void Interface_transmitOneThruster(uint8_t thrusterId);

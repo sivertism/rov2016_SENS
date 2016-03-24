@@ -314,3 +314,13 @@ extern void Interface_transmitManualThrust(void){
 	VESC_setDutyCycle(7, th7);
 	VESC_setDutyCycle(8, th8);
 }
+
+extern void Interface_transmitOneThruster(uint8_t thrusterId){
+	float th1 = 0;
+
+	th1 -= (float)controller_data[0]/2110.0;
+
+	th1 += (float)controller_data[1]/2110.0;
+
+	VESC_setDutyCycle(thrusterId, th1);
+}
