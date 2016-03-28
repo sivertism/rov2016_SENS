@@ -147,8 +147,8 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
  */
 extern int16_t* Interface_readController(){
 	/* Read messages from CAN receive buffer */
-	uint8_t* controller_package1 = CAN_getMessagePointer(TOP_XBOX_CTRLS);
-	uint8_t* controller_package2 = CAN_getMessagePointer(TOP_XBOX_AXES);
+	uint8_t* controller_package1 = CAN_getMessagePointer(fmi_topside_xbox_ctrl);
+	uint8_t* controller_package2 = CAN_getMessagePointer(fmi_topside_xbox_axes);
 
 
 
@@ -333,7 +333,7 @@ extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID package_req
  * @param	Filter match index for the received message.
  * @retval 	None
  */
-extern int8_t Interface_VESC_getData(uint8_t filter_match_index){
+extern int8_t Interface_VESC_getInt16(uint8_t filter_match_index){
 	uint8_t d0, d1, d2, d3;
 	d0 = CAN_getByteFromMessage(filter_match_index, 0);
 	d1 = CAN_getByteFromMessage(filter_match_index, 1);
