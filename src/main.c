@@ -13,11 +13,13 @@ void init(void);
 int main(void){
 	/* Initialization *********************************************************/
 	init();
+	GPIOE->ODR = 0xFF00; // Turn off LED's
 	topside_xbox_ctrl_fmi = CAN_addRxFilter(TOP_XBOX_CTRLS);
 	topside_xbox_axes_fmi = CAN_addRxFilter(TOP_XBOX_AXES);
+	vesc_current_9 = CAN_addRxFilter(SENSOR_CURR_TEST);
 
 
-	GPIOE->ODR = 0; // Turn off LED's
+	GPIOE->ODR = 0x0; // Turn off LED's
 	/* Private vars ***********************************************************/
 
 	/* Main loop *************************************************************/

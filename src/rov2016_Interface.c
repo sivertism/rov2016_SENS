@@ -37,7 +37,8 @@ typedef enum {
 	CAN_PACKET_FILL_RX_BUFFER_LONG,
 	CAN_PACKET_PROCESS_RX_BUFFER,
 	CAN_PACKET_PROCESS_SHORT_BUFFER,
-	CAN_PACKET_STATUS
+	CAN_PACKET_STATUS,
+	CAN_PACKET_GET_CURRENT
 } CAN_PACKET_ID;
 
 /* Function definitions ----------------------------------------------------------------*/
@@ -323,4 +324,23 @@ extern void Interface_transmitOneThruster(uint8_t thrusterId){
 	th1 += (float)controller_data[1]/2110.0;
 
 	VESC_setDutyCycle(thrusterId, th1);
+}
+
+extern void Interface_VESC_requestCurrent(uint8_t esc_id){
+	CAN_transmitByte_EID((uint32_t)((CAN_PACKET_GET_CURRENT << 8)|esc_id), 0);
+}
+
+extern int8_t Interface_VESC_getCurrent(void){
+	uint8_t d0, d1, d2, d3;
+	d0 = CAN_getByteFromMessage(vesc_current_9, 0);
+	d1 = CAN_getByteFromMessage(vesc_current_9, 1);
+	d2 = CAN_getByteFromMessage(vesc_current_9, 2);
+	d3 = CAN_getByteFromMessage(vesc_current_9, 3);
+
+	int32_t current = (int32_t)	(((uint32_t)d0 << 24)
+								|((uint32_t)d1 << 16)
+								|((uint16_t)d2 << 8)
+								| d3);
+	printf("Current: %d", current);
+	return (int8_t) current/10000;
 }

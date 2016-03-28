@@ -137,8 +137,9 @@ void SysTick_Handler(void){
 
 		int16_t* controller_vals = Interface_readController();
 //		USART_matlab_visualizer_transmit(controller_vals[0], controller_vals[2], controller_vals[3], controller_vals[4]);
-		Interface_transmitManualThrust();
-//		VESC_setDutyCycle(1, 0.1);
+//		Interface_transmitManualThrust();
+		Interface_transmitOneThruster(9);
+//		VESC_setDutyCycle(9, 0.1);
 
 		counter_10_hz = 0;
 
@@ -176,8 +177,12 @@ void SysTick_Handler(void){
 		roll = AHRS_accelerometer_roll(ay,az);
 		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 
+		Interface_VESC_requestCurrent(9);
+
+		CAN_transmitByte(SENSOR_ALIVE, Interface_VESC_getCurrent());
+
 		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
-		CAN_transmitAlive();
+//		CAN_transmitAlive();
 
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
