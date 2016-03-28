@@ -348,19 +348,3 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
 	return result/1000;
 }
 
-/**
- * @brief  	Function for temperature check of all VESC's. Should be
- * 			called every ~1 second
- * @param 	None
- * @retval 	None
- */
-extern void Interface_VESC_temperatureCheck(void){
-
-	/* Increment counter */
-	if(temperature_check_counter < NUMBER_OF_VESCS){
-		temperature_check_counter++;
-	} else {
-		temperature_check_counter = 1;
-	}
-}
-
