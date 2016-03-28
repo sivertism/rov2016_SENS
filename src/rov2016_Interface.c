@@ -316,6 +316,12 @@ extern void Interface_transmitManualThrust(void){
 	VESC_setDutyCycle(8, th8);
 }
 
+/**
+ * @brief  	Utility function for controlling one thruster with
+ * 			Xbox-triggers.
+ * @param 	Thruster/esc identifier.
+ * @retval 	None
+ */
 extern void Interface_transmitOneThruster(uint8_t thrusterId){
 	float th1 = 0;
 
@@ -326,21 +332,33 @@ extern void Interface_transmitOneThruster(uint8_t thrusterId){
 	VESC_setDutyCycle(thrusterId, th1);
 }
 
+/**
+ * @brief  	Request motor current data from an esc.
+ * 			Result gets stored in the CAN receive buffer.
+ * @param  	ESC identifier.
+ * @retval 	None
+ */
 extern void Interface_VESC_requestCurrent(uint8_t esc_id){
 	CAN_transmitByte_EID((uint32_t)((CAN_PACKET_GET_CURRENT << 8)|esc_id), 0);
 }
 
-extern int8_t Interface_VESC_getCurrent(void){
+/**
+ * @brief  	Retrieve motor current data from the CAN receive
+ * 			buffer.
+ * @param	Filter match index for the received message containing
+ * 			the current data.
+ * @retval 	None
+ */
+extern int8_t Interface_VESC_getCurrent(uint8_t filter_match_index){
 	uint8_t d0, d1, d2, d3;
-	d0 = CAN_getByteFromMessage(vesc_current_9, 0);
-	d1 = CAN_getByteFromMessage(vesc_current_9, 1);
-	d2 = CAN_getByteFromMessage(vesc_current_9, 2);
-	d3 = CAN_getByteFromMessage(vesc_current_9, 3);
+	d0 = CAN_getByteFromMessage(filter_match_index, 0);
+	d1 = CAN_getByteFromMessage(filter_match_index, 1);
+	d2 = CAN_getByteFromMessage(filter_match_index, 2);
+	d3 = CAN_getByteFromMessage(filter_match_index, 3);
 
 	int32_t current = (int32_t)	(((uint32_t)d0 << 24)
 								|((uint32_t)d1 << 16)
 								|((uint16_t)d2 << 8)
 								| d3);
-	printf("Current: %d", current);
-	return (int8_t) current/10000;
+	return (int8_t) current/1000;
 }

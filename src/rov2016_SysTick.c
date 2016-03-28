@@ -179,7 +179,7 @@ void SysTick_Handler(void){
 
 		Interface_VESC_requestCurrent(9);
 
-		CAN_transmitByte(SENSOR_ALIVE, Interface_VESC_getCurrent());
+		CAN_transmitByte(SENSOR_ALIVE, Interface_VESC_getCurrent(vesc_current_9));
 
 		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
 //		CAN_transmitAlive();
