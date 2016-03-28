@@ -25,22 +25,6 @@ extern int16_t controller_data[7] = {0};
 static uint8_t dataBuffer[8] = {0};
 static uint8_t counter_alive = 0;
 
-
-
-typedef enum {
-	CAN_PACKET_SET_DUTY = 0,
-	CAN_PACKET_SET_CURRENT,
-	CAN_PACKET_SET_CURRENT_BRAKE,
-	CAN_PACKET_SET_RPM,
-	CAN_PACKET_SET_POS,
-	CAN_PACKET_FILL_RX_BUFFER,
-	CAN_PACKET_FILL_RX_BUFFER_LONG,
-	CAN_PACKET_PROCESS_RX_BUFFER,
-	CAN_PACKET_PROCESS_SHORT_BUFFER,
-	CAN_PACKET_STATUS,
-	CAN_PACKET_GET_CURRENT
-} CAN_PACKET_ID;
-
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
@@ -333,32 +317,33 @@ extern void Interface_transmitOneThruster(uint8_t thrusterId){
 }
 
 /**
- * @brief  	Request motor current data from an esc.
- * 			Result gets stored in the CAN receive buffer.
- * @param  	ESC identifier.
+ * @brief  	Request data from a VESC, received data gets stored
+ * 			in the CAN receive buffer.
+ * @param  	esc_id:				ESC identifier.
+ * @param	package_request: 	CAN package to be requested from the
+ * 								VESC.
  * @retval 	None
  */
-extern void Interface_VESC_requestCurrent(uint8_t esc_id){
-	CAN_transmitByte_EID((uint32_t)((CAN_PACKET_GET_CURRENT << 8)|esc_id), 0);
+extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID package_request){
+	CAN_transmitByte_EID((uint32_t)((package_request << 8)|esc_id), 0);
 }
 
 /**
- * @brief  	Retrieve motor current data from the CAN receive
- * 			buffer.
- * @param	Filter match index for the received message containing
- * 			the current data.
+ * @brief  	Retrieve an int16_t from a VESC message.
+ * @param	Filter match index for the received message.
  * @retval 	None
  */
-extern int8_t Interface_VESC_getCurrent(uint8_t filter_match_index){
+extern int8_t Interface_VESC_getData(uint8_t filter_match_index){
 	uint8_t d0, d1, d2, d3;
 	d0 = CAN_getByteFromMessage(filter_match_index, 0);
 	d1 = CAN_getByteFromMessage(filter_match_index, 1);
 	d2 = CAN_getByteFromMessage(filter_match_index, 2);
 	d3 = CAN_getByteFromMessage(filter_match_index, 3);
 
-	int32_t current = (int32_t)	(((uint32_t)d0 << 24)
+	int32_t result = (int32_t)	(((uint32_t)d0 << 24)
 								|((uint32_t)d1 << 16)
 								|((uint16_t)d2 << 8)
 								| d3);
-	return (int8_t) current/1000;
+	return (int8_t) result/1000;
 }
+

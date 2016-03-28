@@ -177,9 +177,6 @@ void SysTick_Handler(void){
 		roll = AHRS_accelerometer_roll(ay,az);
 		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 
-		Interface_VESC_requestCurrent(9);
-
-		CAN_transmitByte(SENSOR_ALIVE, Interface_VESC_getCurrent(vesc_current_9));
 
 		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
 //		CAN_transmitAlive();
