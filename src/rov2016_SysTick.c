@@ -90,8 +90,8 @@ void SysTick_Handler(void){
 
 		/* Check for messages from topside and set LED's accordingly. */
 		if(CAN_getRxMessages()>0){
-//			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
-//			GPIOE->ODR = (uint16_t)buttons_1 << 12;
+			uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
+			GPIOE->ODR = (uint16_t)buttons_1 << 12;
 		}
 
 		ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
@@ -180,8 +180,8 @@ void SysTick_Handler(void){
 //		CAN_transmitAlive();
 
 		/* VESC testing. */
-		Interface_VESC_requestData(9, CAN_PACKET_GET_RPM);
-		CAN_transmitByte(SENSOR_ALIVE,Interface_VESC_getInt16(fmi_vesc_rpm_9));
+		Interface_VESC_requestData(9, CAN_PACKET_GET_MOSFET_TEMP);
+		CAN_transmitByte(SENSOR_ALIVE, (uint8_t)(Interface_VESC_getInt32(fmi_vesc_mosfet_temperature_9)));
 		/* End VESC testing. */
 
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;

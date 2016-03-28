@@ -19,11 +19,12 @@
 #include <stdlib.h>
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
-extern int16_t controller_data[7] = {0};
+int16_t controller_data[7] = {0};
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t dataBuffer[8] = {0};
 static uint8_t counter_alive = 0;
+static uint8_t temperature_check_counter = 1;
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -333,7 +334,7 @@ extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID package_req
  * @param	Filter match index for the received message.
  * @retval 	None
  */
-extern int8_t Interface_VESC_getInt16(uint8_t filter_match_index){
+extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
 	uint8_t d0, d1, d2, d3;
 	d0 = CAN_getByteFromMessage(filter_match_index, 0);
 	d1 = CAN_getByteFromMessage(filter_match_index, 1);
@@ -344,6 +345,22 @@ extern int8_t Interface_VESC_getInt16(uint8_t filter_match_index){
 								|((uint32_t)d1 << 16)
 								|((uint16_t)d2 << 8)
 								| d3);
-	return (int8_t) result/1000;
+	return result/1000;
+}
+
+/**
+ * @brief  	Function for temperature check of all VESC's. Should be
+ * 			called every ~1 second
+ * @param 	None
+ * @retval 	None
+ */
+extern void Interface_VESC_temperatureCheck(void){
+
+	/* Increment counter */
+	if(temperature_check_counter < NUMBER_OF_VESCS){
+		temperature_check_counter++;
+	} else {
+		temperature_check_counter = 1;
+	}
 }
 
