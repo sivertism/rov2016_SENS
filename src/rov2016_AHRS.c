@@ -80,11 +80,11 @@ float AHRS_magnetometer_heading(float mx, float my, float mz){
 	heading *= 180.0/PI;
 
 	/* Correct for south/north error.*/
-	if(heading<180){
-		heading = heading + 180;
-	} else {
-		heading = heading -180;
-	}
+	// if(heading<180){
+	// 	heading = heading + 180;
+	// } else {
+	// 	heading = heading -180;
+	// }
 
 	return heading;
 }
@@ -122,8 +122,8 @@ extern float AHRS_accelerometer_roll(int16_t ay, int16_t az){
 
 /**
  * @brief  	Calculates tilt compensated heading.
- * @param  	float pitch and roll.
- * 			float mx, my, mz accelerometerdata in 3D.
+ * @param  	float pitch and roll in degrees.
+ * @param	float mx, my, mz accelerometerdata in 3D.
  * @retval 	Roll value in degrees.
  */
 extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, float my, float mz){

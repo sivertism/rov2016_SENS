@@ -40,7 +40,7 @@ extern void CAN_transmit_AN_RAW(void);
 extern void CAN_transmitAlive(void);
 extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t heading);
 extern int16_t* Interface_readController();
-
+extern void CAN_transmitDepthTemp(uint16_t depth, uint16_t int_temp, uint16_t manip_temp);
 
 /* VESC interface */
 extern void VESC_setDutyCycle(uint8_t esc_id, float duty);
@@ -48,3 +48,5 @@ extern void Interface_transmitManualThrust(void);
 extern void Interface_transmitOneThruster(uint8_t thrusterId);
 extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID request_message);
 extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index);
+extern void Interface_VESC_requestTemperature(void);
+extern void Interface_VESC_requestRPM(void);

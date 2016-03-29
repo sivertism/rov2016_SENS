@@ -5,6 +5,13 @@ volatile uint8_t fmi_vesc_current_9 = 0;
 volatile uint8_t fmi_vesc_rpm_9 = 0;
 volatile uint8_t fmi_vesc_mosfet_temperature_9 = 0;
 
+/* Global software flags */
+volatile uint8_t flag_systick_update_heading = 0;
+volatile uint8_t flag_systick_update_attitude = 0;
+volatile uint8_t flag_systick_transmit_thrust = 0;
+volatile uint8_t flag_systick_update_depth = 0;
+volatile uint8_t flag_systick_update_ms5803_temp = 0;
+
 /* Choice of axis in accelerometer_data */
 const uint8_t ACC_AXIS_X				= 0;
 const uint8_t ACC_AXIS_Y				= 1;
