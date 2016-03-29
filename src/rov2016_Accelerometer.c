@@ -115,12 +115,23 @@ extern int16_t accelerometer_getRawData(uint8_t axis){
 }
 
 /**
- * @brief  Returns the magnetometer data for the selected axis.
+ * @brief  Returns calibrated magnetometer data for the selected axis.
  * @param  uint8_t axis - The wanted axis, X=0, Y=1, Z=2
- * @retval The magnetometer data for the selected axis (int16_t) in 463867.2 G/LSb.
+ * @retval The magnetometer data for the selected axis (float32).
  */
-extern int16_t magnetometer_getRawData(uint8_t axis){
-	int16_t temp = (int16_t) ( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
+extern float magnetometer_getData(uint8_t axis){
+	float temp = (float) ( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
+	switch axis{
+		case MAGNETOMETER_X_AXIS:
+			temp = (temp + MAG_X_OFFSET)/MAG_X_SCALE;
+			break;
+		case MAGNETOMETER_Y_AXIS:
+			temp = (temp + MAG_Y_OFFSET)/MAG_Y_SCALE;
+			break;
+		case MAGNETOMETER_Z_AXIS:
+			temp = (temp + MAG_Z_OFFSET)/MAG_Z_SCALE;
+			break;
+	}
 	return temp;
 }
 

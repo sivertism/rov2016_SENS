@@ -5,11 +5,12 @@ volatile extern uint8_t fmi_vesc_current_9;
 volatile extern uint8_t fmi_vesc_rpm_9;
 volatile extern uint8_t fmi_vesc_mosfet_temperature_9;
 
-
-/* Choice of axis in accelerometer_data */
-extern const uint8_t ACC_AXIS_X;
-extern const uint8_t ACC_AXIS_Y;
-extern const uint8_t ACC_AXIS_Z;
+/* Global software flags */
+volatile extern uint8_t flag_systick_update_attitude;
+volatile extern uint8_t flag_systick_update_heading;
+volatile extern uint8_t flag_systick_transmit_thrust;
+volatile extern uint8_t flag_systick_update_depth;
+volatile extern uint8_t flag_systick_update_ms5803_temp;
 
 /* Status LED's */
 extern const uint8_t MAIN_LOOP_LED;

@@ -122,8 +122,8 @@ extern float AHRS_accelerometer_roll(int16_t ay, int16_t az){
 
 /**
  * @brief  	Calculates tilt compensated heading.
- * @param  	float pitch and roll.
- * 			float mx, my, mz accelerometerdata in 3D.
+ * @param  	float pitch and roll in degrees.
+ * @param	float mx, my, mz accelerometerdata in 3D.
  * @retval 	Roll value in degrees.
  */
 extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, float my, float mz){

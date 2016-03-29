@@ -9,6 +9,16 @@
   */
 
 /* Macro -------------------------------------------------------------------------------*/
+
+/* Calibration values. */
+#define MAG_X_OFFSET									53.5f
+#define MAG_X_SCALE										558.5f
+#define MAG_Y_OFFSET									97.5f
+#define MAG_Y_SCALE										601.5f
+#define MAG_Z_OFFSET									65.6f
+#define MAG_Z_SCALE										581.5f	
+
+
 /* Macros for getData methods. */
 #define ACCELEROMETER_X_AXIS							0
 #define ACCELEROMETER_Y_AXIS							1
@@ -37,5 +47,5 @@ extern void magnetometer_init(void);
 extern void accelerometer_updateValue(void);
 extern void magnetometer_updateValue(void);
 extern int16_t accelerometer_getRawData(uint8_t axis);
-extern int16_t magnetometer_getRawData(uint8_t axis);
+extern float magnetometer_getData(uint8_t axis);
 extern uint8_t lsm303dlhc_getValues(void);

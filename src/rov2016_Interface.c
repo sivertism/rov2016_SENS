@@ -103,6 +103,22 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
 }
 
 /**
+ * @brief  Send pitch, roll, yaw and heading to topside system.
+ * @param  Pitch, roll, yaw, heading in 0.1 degrees.
+ * @retval None
+ */
+ extern void CAN_transmitDepthTemp(uint16_t depth, uint16_t int_temp, uint16_t manip_temp){
+ 	dataBuffer[0] = (uint8_t)(depth >> 8u);
+ 	dataBuffer[1] = (uint8_t)(depth & 0xFF);
+ 	dataBuffer[2] = (uint8_t)(int_temp >> 8u);
+ 	dataBuffer[3] = (uint8_t)(int_temp & 0xFF);
+ 	dataBuffer[4] = (uint8_t)(ext_temp >> 8u);
+ 	dataBuffer[5] = (uint8_t)(manip_temp & 0xFF);
+
+ 	CAN_transmitBuffer(SENSOR_DEPTH_TEMP, dataBuffer, 6, CAN_ID_STD);
+}
+
+/**
  * @brief  	Sets the duty cycle of the specified VESC BLDC controller.
  * @param  	esc_id:	Can be a value of ESC_ID_x where x can be 1-12.
  * 			duty:	Duty cycle, can be a value between DUTY_CYCLE_MIN and
@@ -147,7 +163,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
  * @param  	Pointer to controller CAN-messages.
  * @retval 	int16_t array containing controller data.
  */
-extern int16_t* Interface_readController(){
+extern void Interface_readController(){
 	/* Read messages from CAN receive buffer */
 	uint8_t* controller_package1 = CAN_getMessagePointer(fmi_topside_xbox_ctrl);
 	uint8_t* controller_package2 = CAN_getMessagePointer(fmi_topside_xbox_axes);

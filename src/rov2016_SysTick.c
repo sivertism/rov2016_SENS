@@ -22,9 +22,7 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_Interface.h"
-#include "MadgwickAHRS.h"
 #include "rov2016_AHRS.h"
-//#include "MahonyAHRS.h"
 #include "stm32f3_discovery_lsm303dlhc.h"
 #include "math.h"
 
@@ -32,11 +30,10 @@
 #include "extern_decl_global_vars.h"
 
 /* Private variables -------------------------------------------------------------------*/
-static float gx=0.0f, gy=0.0f, gz=0.0f, mx=0.0, my=0.0, mz=0.0;
-static float heading = 0.0f, pitch=0.0f, roll=0.0f;
+
 static uint8_t isActive=0, counter_10_hz=0;
 static uint16_t counter_1_hz=0;
-static int16_t ax=0, ay=0, az=0;
+
 /* Private function declarations -------------------------------------------------------*/
 
 /* Macro -------------------------------------------------------------------------------*/
@@ -69,93 +66,20 @@ void SysTick_Handler(void){
 	counter_10_hz++;
 	counter_1_hz++;
 
-	/* Check for USART messages, start if 'k' */
-	if (USART_getNewBytes()>0){
-		uint8_t melding = USART_getRxMessage();
-		if (melding == 'k') {
-			isActive = 1;
-			USART_transmit(USART2, 0x02); // STX
-		}
-		if (melding == 's'){
-			isActive = 0;
-			USART_transmit(USART2, 0x03); //ETX
-		}
+	Interface_VESC_requestRPM();
+
+	/* Check for messages from topside and set LED's accordingly. */
+	if(CAN_getRxMessages()>0){
+		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
+		GPIOE->ODR = (uint16_t)buttons_1 << 12;
 	}
-
-	accelerometer_updateValue();
-	magnetometer_updateValue();
-	gyroscope_updateValue();
-
-	if(1){
-
-		Interface_VESC_requestRPM();
-
-		/* Check for messages from topside and set LED's accordingly. */
-		if(CAN_getRxMessages()>0){
-			uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
-			GPIOE->ODR = (uint16_t)buttons_1 << 12;
-		}
-
-		ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-		ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-		az = accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
-
-		mx = (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS);
-		my = (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
-		mz = (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
-
-		/* Calibration */
-		mx = (mx + 53.5)/558.5;
-		my = (my + 97.5)/601.5;
-		mz = (mz + 65.5)/581.5;;
-
-		gx = gyroscope_getRPS(GYROSCOPE_X_AXIS);
-		gy = gyroscope_getRPS(GYROSCOPE_Y_AXIS);
-		gz = gyroscope_getRPS(GYROSCOPE_Z_AXIS);
-
-
-
-
-//		heading = MCD_APP_TEAM_AHRS(ax,ay,az,mx,my,mz,gx,gy,gz);
-
-		/* Update AHRS (Attitude Heading Reference System. */
-//		MadgwickAHRSupdate(gx,gy,gz,ax,ay,az,mx,my,mz);
-
-		/* From testing. */
-//		MadgwickAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
-//		MahonyAHRSupdate(gy, -gx, gz, -ax, -ay, az, -mx, -my, mz);
-
-		/* From MCD application team. */
-//		MadgwickAHRSupdate(-gy, gx, gz, ax, ay, az, mx, my, mz);
-		//myFusion(-gy, gx, gz, ax, ay, az, mx, my, mz);
-
-//		MadgwickAHRSupdateIMU(gy, -gx, gz, -ax, -ay, az);
-		//MadgwickAHRSupdateIMU(gx, gy, gz, ax, ay, az);
-	} // end if
 
 	/* 10 Hz loop */
 	if((counter_10_hz>9)){
-
-
-		/* VESC testing. */
-		Interface_VESC_requestData(9, CAN_PACKET_GET_RPM);
-		CAN_transmitByte(SENSOR_ALIVE, (uint8_t)(Interface_VESC_getInt32(fmi_vesc_rpm_9)/1000));
-		Interface_transmitManualThrust();
-		int16_t* controller_vals = Interface_readController();
-//		USART_matlab_visualizer_transmit(controller_vals[0], controller_vals[2], controller_vals[3], controller_vals[4]);
-
-		/* End VESC testing. */
-
 		counter_10_hz = 0;
-
-
-//		GPIO_leakage_detector_disable();
-
-		/* Transmit quaternions over CAN-bus. */
-//		CAN_transmitQuaternions((int16_t)(q0*1000), (int16_t)(q1*1000), (int16_t)(q2*1000), (int16_t)(q3*1000));
-
-		/* Transmit q0...q3 to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(q0*10000), (int16_t)(q1*10000), (int16_t)(q2*10000), (int16_t)(q3*10000));
+		flag_systick_update_attitude = 1;
+		flag_systick_transmit_thrust = 1;
+		flag_systick_update_depth = 1;
 
 		/* Transmit a_x, a_y, a_z to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(ax*10), (int16_t)(ay*10), (int16_t)(az*10), (int16_t)(0u));
@@ -168,25 +92,27 @@ void SysTick_Handler(void){
 
 		/* Transmit heading to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(heading*10.0),0,0,0);
-
-		/* Transmit joystick to matlab. */
-
-
-		/* Transmit -2, -1, 0, 1 x10000 to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(-2*10000), (int16_t)(-1*10000), (int16_t)(0*10000), (int16_t)(1*10000));
+		
+		/* Check for USART messages, start if 'k' */
+		if (USART_getNewBytes()>0){
+			uint8_t melding = USART_getRxMessage();
+			if (melding == 'k') {
+				isActive = 1;
+				USART_transmit(USART2, 0x02); // STX
+			}
+			if (melding == 's'){
+				isActive = 0;
+				USART_transmit(USART2, 0x03); //ETX
+			}
+		}
 	} // end 10 hz loop.
 
 
 	/* 1 Hz loop */
 	if(counter_1_hz>99){
-		pitch = AHRS_accelerometer_pitch(ax, ay, az);
-		roll = AHRS_accelerometer_roll(ay,az);
-		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
-
+		flag_systick_update_ms5803_temp = 1;
 		Interface_VESC_requestTemperature();
-
-		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
-//		CAN_transmitAlive();
+		CAN_transmitAlive();
 
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
