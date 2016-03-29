@@ -348,3 +348,21 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
 	return result/1000;
 }
 
+/**
+ * @brief  	Request temperature data from VESC's incrementally 
+ 			one at a time. This function should be called every 
+ 			~1 second. Data is read by the topside system.
+ * @param	None
+ * @retval 	None
+ */
+extern void Interface_requestTemperature(void){
+	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_MOSFET_TEMP);
+
+	/* Increment counter. */
+	if(temperature_check_counter < NUMBER_OF_VESCS){
+		temperature_check_counter++;
+	} else {
+		temperature_check_counter = 1;
+	}
+}
+

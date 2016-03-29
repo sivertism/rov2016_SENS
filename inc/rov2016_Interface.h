@@ -48,3 +48,4 @@ extern void Interface_transmitManualThrust(void);
 extern void Interface_transmitOneThruster(uint8_t thrusterId);
 extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID request_message);
 extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index);
+extern void Interface_requestTemperature(void);
