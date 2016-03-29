@@ -19,26 +19,12 @@
 #include <stdlib.h>
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
-extern int16_t controller_data[7] = {0};
+int16_t controller_data[7] = {0};
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t dataBuffer[8] = {0};
 static uint8_t counter_alive = 0;
-
-
-
-typedef enum {
-	CAN_PACKET_SET_DUTY = 0,
-	CAN_PACKET_SET_CURRENT,
-	CAN_PACKET_SET_CURRENT_BRAKE,
-	CAN_PACKET_SET_RPM,
-	CAN_PACKET_SET_POS,
-	CAN_PACKET_FILL_RX_BUFFER,
-	CAN_PACKET_FILL_RX_BUFFER_LONG,
-	CAN_PACKET_PROCESS_RX_BUFFER,
-	CAN_PACKET_PROCESS_SHORT_BUFFER,
-	CAN_PACKET_STATUS
-} CAN_PACKET_ID;
+static uint8_t temperature_check_counter = 1;
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -162,8 +148,8 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
  */
 extern int16_t* Interface_readController(){
 	/* Read messages from CAN receive buffer */
-	uint8_t* controller_package1 = CAN_getMessagePointer(TOP_XBOX_CTRLS);
-	uint8_t* controller_package2 = CAN_getMessagePointer(TOP_XBOX_AXES);
+	uint8_t* controller_package1 = CAN_getMessagePointer(fmi_topside_xbox_ctrl);
+	uint8_t* controller_package2 = CAN_getMessagePointer(fmi_topside_xbox_axes);
 
 
 
@@ -314,3 +300,51 @@ extern void Interface_transmitManualThrust(void){
 	VESC_setDutyCycle(7, th7);
 	VESC_setDutyCycle(8, th8);
 }
+
+/**
+ * @brief  	Utility function for controlling one thruster with
+ * 			Xbox-triggers.
+ * @param 	Thruster/esc identifier.
+ * @retval 	None
+ */
+extern void Interface_transmitOneThruster(uint8_t thrusterId){
+	float th1 = 0;
+
+	th1 -= (float)controller_data[0]/2110.0;
+
+	th1 += (float)controller_data[1]/2110.0;
+
+	VESC_setDutyCycle(thrusterId, th1);
+}
+
+/**
+ * @brief  	Request data from a VESC, received data gets stored
+ * 			in the CAN receive buffer.
+ * @param  	esc_id:				ESC identifier.
+ * @param	package_request: 	CAN package to be requested from the
+ * 								VESC.
+ * @retval 	None
+ */
+extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID package_request){
+	CAN_transmitByte_EID((uint32_t)((package_request << 8)|esc_id), 0);
+}
+
+/**
+ * @brief  	Retrieve an int16_t from a VESC message.
+ * @param	Filter match index for the received message.
+ * @retval 	None
+ */
+extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
+	uint8_t d0, d1, d2, d3;
+	d0 = CAN_getByteFromMessage(filter_match_index, 0);
+	d1 = CAN_getByteFromMessage(filter_match_index, 1);
+	d2 = CAN_getByteFromMessage(filter_match_index, 2);
+	d3 = CAN_getByteFromMessage(filter_match_index, 3);
+
+	int32_t result = (int32_t)	(((uint32_t)d0 << 24)
+								|((uint32_t)d1 << 16)
+								|((uint16_t)d2 << 8)
+								| d3);
+	return result/1000;
+}
+

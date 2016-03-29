@@ -10,6 +10,8 @@
   */
 
 /* VESC interface. */
+#define NUMBER_OF_VESCS							8
+#define VESC_TEMPERATURE_ALARM_LIMIT			60u
 #define VESC_DUTY_CYCLE_MAX						0.95f
 #define VESC_DUTY_CYCLE_MIN						-0.95f
 #define VESC_DUTY_CYCLE_DIR_CHANGE				0.3f
@@ -43,3 +45,6 @@ extern int16_t* Interface_readController();
 /* VESC interface */
 extern void VESC_setDutyCycle(uint8_t esc_id, float duty);
 extern void Interface_transmitManualThrust(void);
+extern void Interface_transmitOneThruster(uint8_t thrusterId);
+extern void Interface_VESC_requestData(uint8_t esc_id, CAN_PACKET_ID request_message);
+extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index);

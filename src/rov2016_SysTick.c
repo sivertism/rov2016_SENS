@@ -22,7 +22,6 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_Interface.h"
-#include "rov2016_REG.h"
 #include "MadgwickAHRS.h"
 #include "rov2016_AHRS.h"
 //#include "MahonyAHRS.h"
@@ -91,8 +90,8 @@ void SysTick_Handler(void){
 
 		/* Check for messages from topside and set LED's accordingly. */
 		if(CAN_getRxMessages()>0){
-//			uint8_t buttons_1 = CAN_getByteFromMessage(topside_xbox_axes_fmi,4);
-//			GPIOE->ODR = (uint16_t)buttons_1 << 12;
+			uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
+			GPIOE->ODR = (uint16_t)buttons_1 << 12;
 		}
 
 		ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
@@ -135,12 +134,19 @@ void SysTick_Handler(void){
 	/* 10 Hz loop */
 	if((counter_10_hz>9)){
 
+
+		/* VESC testing. */
+		Interface_VESC_requestData(9, CAN_PACKET_GET_RPM);
+		CAN_transmitByte(SENSOR_ALIVE, (uint8_t)(Interface_VESC_getInt32(fmi_vesc_rpm_9)/1000));
+//		Interface_transmitManualThrust();
+		Interface_transmitOneThruster(9);
 		int16_t* controller_vals = Interface_readController();
 //		USART_matlab_visualizer_transmit(controller_vals[0], controller_vals[2], controller_vals[3], controller_vals[4]);
-		Interface_transmitManualThrust();
-//		VESC_setDutyCycle(1, 0.1);
+
+		/* End VESC testing. */
 
 		counter_10_hz = 0;
+
 
 //		GPIO_leakage_detector_disable();
 
@@ -177,7 +183,7 @@ void SysTick_Handler(void){
 		heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 
 		CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), 0, (uint16_t)(heading*10));
-		CAN_transmitAlive();
+//		CAN_transmitAlive();
 
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
