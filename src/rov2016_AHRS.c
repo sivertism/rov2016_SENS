@@ -80,11 +80,11 @@ float AHRS_magnetometer_heading(float mx, float my, float mz){
 	heading *= 180.0/PI;
 
 	/* Correct for south/north error.*/
-	if(heading<180){
-		heading = heading + 180;
-	} else {
-		heading = heading -180;
-	}
+	// if(heading<180){
+	// 	heading = heading + 180;
+	// } else {
+	// 	heading = heading -180;
+	// }
 
 	return heading;
 }

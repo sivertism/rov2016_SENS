@@ -20,7 +20,6 @@ int main(void){
 	fmi_vesc_rpm_9 = CAN_addRxFilter(VESC_RPM_BASE + 9);
 	fmi_vesc_mosfet_temperature_9 = CAN_addRxFilter(VESC_MOSFET_TEMP_BASE + 9);
 
-
 	GPIOE->ODR = 0x0; // Turn off LED's
 	/* Private vars ***********************************************************/
 
