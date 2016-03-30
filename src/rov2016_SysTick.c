@@ -48,7 +48,7 @@ static uint16_t counter_1_hz=0;
  */
 extern void SysTick_init(void) {
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_0);
-	NVIC_SetPriority(SysTick_IRQn, 1);
+	NVIC_SetPriority(SysTick_IRQn, 7);
 	SysTick->CTRL = 0; /* Disable SysTick */
 	SysTick->LOAD = 72000000/100;  // 10 msek avbruddsintervall.
 	SysTick->VAL = 0;
