@@ -108,7 +108,7 @@ extern void SPI2_Init(void){
 	/* Interrupt handler settings */
 	NVIC_InitTypeDef NVIC_InitStruct;
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 5;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannel = SPI2_IRQn;
 	NVIC_Init(&NVIC_InitStruct);

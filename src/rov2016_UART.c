@@ -82,7 +82,7 @@ extern void USART1_init(void){
 	/* Interrupt setup */
 	NVIC_InitStruct_USART.NVIC_IRQChannel = USART1_IRQn;
 	NVIC_InitStruct_USART.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct_USART.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct_USART.NVIC_IRQChannelSubPriority = 7;
 	NVIC_InitStruct_USART.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStruct_USART);
 
