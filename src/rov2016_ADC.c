@@ -24,7 +24,7 @@
 
 /* Private function prototypes ---------------------------------------------------------*/
 void ADC1_2_IRQHandler(void);
-void ADC4_IRQHandler(void);
+void ADC4_I RQHandler(void);
 void DMA1_Channel1_IRQHandler(void);
 void DMA2_Channel2_IRQHandler(void);
 uint8_t ADC_getValues(void);
@@ -294,7 +294,7 @@ void ADC_init(void){
 
 	/* Enable DMA interrup handler */
 	NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 0;
-	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
+	NVIC_InitStruct.NVIC_IRQChannelSubPriority = 6;
 	NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_InitStruct.NVIC_IRQChannel = DMA1_Channel1_IRQn;
 	NVIC_Init(&NVIC_InitStruct);
