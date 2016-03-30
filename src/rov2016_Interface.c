@@ -193,10 +193,10 @@ extern void Interface_readController(){
 	/* Bumpers */
 	if (controller_package2[4] & 0x10){
 		/* Left bumper pressed -> counterclockwise rotation. */
-		controller_data[6] = -1;
+		controller_data[6] = -1000;
 	} else if (controller_package2[4] & 0x20){
 		/* Right bumper pressed -> clockwise rotation. */
-		controller_data[6] = 1;
+		controller_data[6] = 1000;
 	} else {
 		/* No bumpers pressed */
 		controller_data[6] = 0;
@@ -219,48 +219,48 @@ extern void Interface_readController(){
  * @retval 	int16_t array containing controller data.
  */
 extern void Interface_transmitManualThrust(void){
-	float th1=0.0, th2=0.0, th3=0.0, th4=0.0, th5=0.0, th6=0.0, th7=0.0, th8=0.0;
+	float th1=0.0f, th2=0.0f, th3=0.0f, th4=0.0f, th5=0.0f, th6=0.0f, th7=0.0f, th8=0.0f;
 
 
 	/* Thruster 1-4 (up-/downwards thrust) **********************************************************/
-	float downthrust = (float)controller_data[0]/2000.0;
+	float downthrust = (float)controller_data[0]/2000.0f;
 	th1 -= downthrust;
 	th2 -= downthrust;
 	th3 -= downthrust;
 	th4 -= downthrust;
 
-	float upthrust = (float)controller_data[1]/2000.0;
+	float upthrust = (float)controller_data[1]/2000.0f;
 	th1 += upthrust;
 	th2 += upthrust;
 	th3 += upthrust;
 	th4 += upthrust;
 
-	float rollthrust = (float)controller_data[4]/1000.0;
+	float rollthrust = (float)controller_data[4]/1000.0f;
 	th1 -= rollthrust;
 	th2 -= rollthrust;
 	th3 += rollthrust;
 	th4 += rollthrust;
 
-	float pitchthrust = (float)controller_data[5]/1000.0;
+	float pitchthrust = (float)controller_data[5]/1000.0f;
 	th1 += pitchthrust;
 	th2 -= pitchthrust;
 	th3 += pitchthrust;
 	th4 -= pitchthrust;
 
 	/* Thruster 5-8 (sideways thrust) ***************************************************************/
-	float swaythrust = (float)controller_data[2]/1000.0;
+	float swaythrust = (float)controller_data[2]/1000.0f;
 	th5 -= swaythrust;
 	th6 += swaythrust;
 	th7 -= swaythrust;
 	th8 += swaythrust;
 
-	float surgethrust = (float)controller_data[3]/1000.0;
+	float surgethrust = (float)controller_data[3]/1000.0f;
 	th5 -= surgethrust;
 	th6 -= surgethrust;
 	th7 -= surgethrust;
 	th8 -= surgethrust;
 
-	float yawthrust = (float)controller_data[6];
+	float yawthrust = (float)controller_data[6]/1000.0f;
 	th5 -= yawthrust;
 	th6 -= yawthrust;
 	th7 += yawthrust;
@@ -282,28 +282,28 @@ extern void Interface_transmitManualThrust(void){
 	if(maxthrust_sideways > abs(th7)) maxthrust_sideways = abs(th7);
 	if(maxthrust_sideways > abs(th8)) maxthrust_sideways = abs(th8);
 
-	if(maxthrust_up_down > 1){
-		th1 = th1/maxthrust_up_down - 0.06;
-		th2 = th2/maxthrust_up_down - 0.06;
-		th3 = th3/maxthrust_up_down - 0.06;
-		th4 = th4/maxthrust_up_down - 0.06;
-	} else if (maxthrust_up_down > 0.95){
-		th1 -= 0.06;
-		th2 -= 0.06;
-		th3 -= 0.06;
-		th4 -= 0.06;
+	if(maxthrust_up_down > 1.0f){
+		th1 = th1/(maxthrust_up_down*1.06f);
+		th2 = th2/(maxthrust_up_down*1.06f);
+		th3 = th3/(maxthrust_up_down*1.06f);
+		th4 = th4/(maxthrust_up_down*1.06f);
+	} else if (maxthrust_up_down > 0.95f){
+		th1 /= 1.06f;
+		th2 /= 1.06f;
+		th3 /= 1.06f;
+		th4 /= 1.06f;
 	}
 
-	if(maxthrust_sideways > 1){
-		th5 = th5/maxthrust_sideways - 0.06;
-		th6 = th6/maxthrust_sideways - 0.06;
-		th7 = th7/maxthrust_sideways - 0.06;
-		th8 = th8/maxthrust_sideways - 0.06;
-	} else if (maxthrust_sideways > 0.95){
-		th5 -= 0.06;
-		th6 -= 0.06;
-		th7 -= 0.06;
-		th8 -= 0.06;
+	if(maxthrust_sideways > 1.0f){
+		th5 = th5/(maxthrust_sideways*1.06);
+		th6 = th6/(maxthrust_sideways*1.06);
+		th7 = th7/(maxthrust_sideways*1.06);
+		th8 = th8/(maxthrust_sideways*1.06);
+	} else if (maxthrust_sideways > 0.95f){
+		th5 /= 1.06f;
+		th6 /= 1.06f;
+		th7 /= 1.06f;
+		th8 /= 1.06f;
 	}
 
 	/* Send thrust to ESC's. */
