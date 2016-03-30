@@ -32,7 +32,7 @@ int main(void){
 	/* Main loop **************************************************************/
 	while(1){
 
-		/* Calculate pitch, roll and heading and transmit via CAN-bus */
+		/* Calculate pitchand roll and transmit via CAN-bus */
 		if (flag_systick_update_attitude){
 			accelerometer_updateValue();
 			magnetometer_updateValue();
@@ -49,6 +49,10 @@ int main(void){
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
 
+			if(!flag_systick_update_heading){
+			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(yaw*10), \
+				(uint16_t)(heading*10));
+			}
 
 			flag_systick_update_attitude = 0;
 		}
