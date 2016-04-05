@@ -112,7 +112,7 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
  	dataBuffer[1] = (uint8_t)(depth & 0xFF);
  	dataBuffer[2] = (uint8_t)(int_temp >> 8u);
  	dataBuffer[3] = (uint8_t)(int_temp & 0xFF);
- 	dataBuffer[4] = (uint8_t)(ext_temp >> 8u);
+ 	dataBuffer[4] = (uint8_t)(manip_temp >> 8u);
  	dataBuffer[5] = (uint8_t)(manip_temp & 0xFF);
 
  	CAN_transmitBuffer(SENSOR_DEPTH_TEMP, dataBuffer, 6, CAN_ID_STD);
@@ -163,7 +163,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
  * @param  	Pointer to controller CAN-messages.
  * @retval 	int16_t array containing controller data.
  */
-extern void Interface_readController(){
+extern int16_t* Interface_readController(void){
 	/* Read messages from CAN receive buffer */
 	uint8_t* controller_package1 = CAN_getMessagePointer(fmi_topside_xbox_ctrl);
 	uint8_t* controller_package2 = CAN_getMessagePointer(fmi_topside_xbox_axes);

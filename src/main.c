@@ -2,6 +2,9 @@
 #include "stm32f30x_gpio.h"
 #include "rov2016_canbus.h"
 #include "rov2016_Interface.h"
+#include "rov2016_Accelerometer.h"
+#include "rov2016_SPI.h"
+
 
 /* GLOBAL VARIABLES ----------------------------------------------------------*/
 #include "def_global_vars.h"
@@ -50,7 +53,7 @@ int main(void){
 			roll = AHRS_accelerometer_roll(ay, az);
 
 			if(!flag_systick_update_heading){
-			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(yaw*10), \
+			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
 				(uint16_t)(heading*10));
 			}
 
@@ -60,7 +63,7 @@ int main(void){
 		/* Calculate heading and transmit pitch, roll, heading to topside. */
 		if(flag_systick_update_heading){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
-			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(yaw*10), \
+			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
 				(uint16_t)(heading*10));
 
 			flag_systick_update_heading = 0;

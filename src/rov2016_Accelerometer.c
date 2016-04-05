@@ -121,7 +121,7 @@ extern int16_t accelerometer_getRawData(uint8_t axis){
  */
 extern float magnetometer_getData(uint8_t axis){
 	float temp = (float) ( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
-	switch axis{
+	switch (axis){
 		case MAGNETOMETER_X_AXIS:
 			temp = (temp + MAG_X_OFFSET)/MAG_X_SCALE;
 			break;

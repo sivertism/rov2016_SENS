@@ -24,7 +24,7 @@
 
 /* Private function prototypes ---------------------------------------------------------*/
 void ADC1_2_IRQHandler(void);
-void ADC4_I RQHandler(void);
+void ADC4_IRQHandler(void);
 void DMA1_Channel1_IRQHandler(void);
 void DMA2_Channel2_IRQHandler(void);
 uint8_t ADC_getValues(void);
