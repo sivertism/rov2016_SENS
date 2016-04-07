@@ -65,7 +65,6 @@ int main(void){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
 				(uint16_t)(heading*10));
-
 			flag_systick_update_heading = 0;
 		}
 
@@ -86,8 +85,10 @@ int main(void){
 		/* Transmit duty cycle to thrusters. */
 		if (flag_systick_transmit_thrust){
 			int16_t* controller_vals = Interface_readController();
-			Interface_transmitManualThrust();
+//			Interface_transmitManualThrust();
+			Interface_transmitOneThruster(2);
 			flag_systick_transmit_thrust = 0;
+//			VESC_setDutyCycle(ESC_ID_2, 0.1);
 		}
 
 	} // end while
