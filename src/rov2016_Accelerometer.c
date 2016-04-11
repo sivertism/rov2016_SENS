@@ -124,15 +124,13 @@ extern float magnetometer_getData(uint8_t axis){
 	float temp = (float) temp_int;
 	switch (axis){
 		case MAGNETOMETER_X_AXIS:
-//				printf("mx1: %d", (int32_t)(temp));
-			temp = (temp + MAG_X_OFFSET)/MAG_X_SCALE;
-//				printf("mx2: %d",  (int32_t)(temp*1000.0));
+			temp = (temp - MAG_X_OFFSET)/MAG_X_SCALE;
 			break;
 		case MAGNETOMETER_Y_AXIS:
-			temp = (temp + MAG_Y_OFFSET)/MAG_Y_SCALE;
+			temp = (temp - MAG_Y_OFFSET)/MAG_Y_SCALE;
 			break;
 		case MAGNETOMETER_Z_AXIS:
-			temp = (temp + MAG_Z_OFFSET)/MAG_Z_SCALE;
+			temp = (temp - MAG_Z_OFFSET)/MAG_Z_SCALE;
 			break;
 	}
 	return temp;

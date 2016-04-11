@@ -95,15 +95,10 @@ void SysTick_Handler(void){
 		float mz_c = magnetometer_getData(MAGNETOMETER_Z_AXIS);
 		float heading_comp = AHRS_magnetometer_heading(mx_c, my_c, mz_c);
 
-//		printf("mx_r: %d", magnetometer_getRawData(MAGNETOMETER_X_AXIS));
-//		printf("mx_c: %d", (int16_t)(mx_c*1000));
 
-		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
-		USART_matlab_visualizer_transmit((int16_t)(mx_r*1000), (int16_t)(mx_c*1000), 0);
+		USART_matlab_visualizer_transmit((int16_t)(mx_r*1000), (int16_t)(my_r*1000),(int16_t)(mz_r*1000),
+				(int16_t)(mx_c*1000),(int16_t)(my_c*1000),(int16_t)(mz_c*1000));
 
-		/* Transmit heading to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(heading_raw*10.0),(int16_t)(heading_comp*10.0),0);
-		
 		/* Check for USART messages, start if 'k' */
 		if (USART_getNewBytes()>0){
 			uint8_t melding = USART_getRxMessage();

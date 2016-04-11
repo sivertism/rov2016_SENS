@@ -11,12 +11,12 @@
 /* Macro -------------------------------------------------------------------------------*/
 
 /* Calibration values. */
-#define MAG_X_OFFSET									53.5f
-#define MAG_X_SCALE										558.5f
-#define MAG_Y_OFFSET									97.5f
-#define MAG_Y_SCALE										601.5f
-#define MAG_Z_OFFSET									65.6f
-#define MAG_Z_SCALE										581.5f	
+#define MAG_X_OFFSET									18.0f
+#define MAG_X_SCALE										506.0f
+#define MAG_Y_OFFSET									-148.5f
+#define MAG_Y_SCALE										519.5f
+#define MAG_Z_OFFSET									-48.0f
+#define MAG_Z_SCALE										453.0f
 
 
 /* Macros for getData methods. */
