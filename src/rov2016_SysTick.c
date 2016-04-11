@@ -98,12 +98,6 @@ void SysTick_Handler(void){
 //		printf("mx_r: %d", magnetometer_getRawData(MAGNETOMETER_X_AXIS));
 //		printf("mx_c: %d", (int16_t)(mx_c*1000));
 
-		/* Transmit a_x, a_y, a_z to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(ax*10), (int16_t)(ay*10), (int16_t)(az*10), (int16_t)(0u));
-
-		/* Transmit g_x, g_y, g_z x10000 to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
-
 		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
 		USART_matlab_visualizer_transmit((int16_t)(mx_r*1000), (int16_t)(mx_c*1000), 0);
 
