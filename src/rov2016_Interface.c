@@ -133,8 +133,8 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 	 */
 
 	/* Check parameters. */
-	if (duty < VESC_DUTY_CYCLE_MIN) return;
-	if (duty > VESC_DUTY_CYCLE_MAX) return;
+	if (duty < VESC_DUTY_CYCLE_MIN) duty = VESC_DUTY_CYCLE_MIN;
+	if (duty > VESC_DUTY_CYCLE_MAX) duty = VESC_DUTY_CYCLE_MAX;
 	if(esc_id > 255) return;
 
 	uint32_t id = (uint32_t)(CAN_PACKET_SET_DUTY << 8) | esc_id;
