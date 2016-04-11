@@ -49,3 +49,4 @@ extern void magnetometer_updateValue(void);
 extern int16_t accelerometer_getRawData(uint8_t axis);
 extern float magnetometer_getData(uint8_t axis);
 extern uint8_t lsm303dlhc_getValues(void);
+extern int16_t magnetometer_getRawData(uint8_t axis);

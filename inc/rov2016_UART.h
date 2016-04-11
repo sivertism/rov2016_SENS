@@ -17,6 +17,6 @@ extern void USART_transmit(USART_TypeDef*, uint8_t data);
 extern void USART2_IRQHandler(void);
 extern void USART_timestamp_transmit(uint8_t timestamp);
 extern void USART_python_logger_transmit(uint8_t header, uint16_t data);
-extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16_t data3, int16_t data4);
+extern void USART_matlab_visualizer_transmit(int16_t data1, int16_t data2, int16_t data3);
 extern uint8_t USART_getNewBytes(void);
 extern uint8_t USART_getRxMessage(void);

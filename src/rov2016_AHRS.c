@@ -64,7 +64,7 @@ float AHRS_magnetometer_heading(float mx, float my, float mz){
 		heading = atan(my/mx);
 		break;
 	case QUADRANT_2:
-		heading = atan(my/mx)+ PI;
+		heading = atan(my/mx) + PI;
 		break;
 	case QUADRANT_3:
 		heading = atan(my/mx) + PI;

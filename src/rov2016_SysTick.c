@@ -65,23 +65,38 @@ extern void SysTick_init(void) {
  */
 void SysTick_Handler(void){
 	counter_10_hz++;
-	counter_1_hz++;
+//	counter_1_hz++;
 
-	Interface_VESC_requestRPM();
+//	Interface_VESC_requestRPM();
 
 	/* Check for messages from topside and set LED's accordingly. */
-	if(CAN_getRxMessages()>0){
-		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
-		GPIOE->ODR = (uint16_t)buttons_1 << 12;
-	}
+//	if(CAN_getRxMessages()>0){
+//		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
+//		GPIOE->ODR = (uint16_t)buttons_1 << 12;
+//	}
 
 	/* 10 Hz loop */
 	if((counter_10_hz>9)){
 		counter_10_hz = 0;
-		flag_systick_update_attitude = 1;
-		flag_systick_update_heading = 1;
-		flag_systick_transmit_thrust = 1;
-		flag_systick_update_depth = 1;
+//		flag_systick_update_attitude = 1;
+//		flag_systick_update_heading = 1;
+//		flag_systick_transmit_thrust = 1;
+//		flag_systick_update_depth = 1;
+
+		magnetometer_updateValue();
+
+		float mx_r = ( (float)magnetometer_getRawData(MAGNETOMETER_X_AXIS) )/1100;
+		float my_r = ( (float)magnetometer_getRawData(MAGNETOMETER_Y_AXIS) )/1100;
+		float mz_r = ( (float)magnetometer_getRawData(MAGNETOMETER_Z_AXIS) )/980;
+		float heading_raw = AHRS_magnetometer_heading(mx_r, my_r, mz_r);
+
+		float mx_c = magnetometer_getData(MAGNETOMETER_X_AXIS);
+		float my_c = magnetometer_getData(MAGNETOMETER_Y_AXIS);
+		float mz_c = magnetometer_getData(MAGNETOMETER_Z_AXIS);
+		float heading_comp = AHRS_magnetometer_heading(mx_c, my_c, mz_c);
+
+//		printf("mx_r: %d", magnetometer_getRawData(MAGNETOMETER_X_AXIS));
+//		printf("mx_c: %d", (int16_t)(mx_c*1000));
 
 		/* Transmit a_x, a_y, a_z to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(ax*10), (int16_t)(ay*10), (int16_t)(az*10), (int16_t)(0u));
@@ -90,25 +105,24 @@ void SysTick_Handler(void){
 //		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
 
 		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
-//		USART_matlab_visualizer_transmit((int16_t)(mx), (int16_t)(my), (int16_t)(mz), (int16_t)(0u));
+//		USART_matlab_visualizer_transmit((int16_t)(mx_r*10000), (int16_t)(my_r*10000), (int16_t)(mz_r*10000));
 
 		/* Transmit heading to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(heading*10.0),0,0,0);
+//		USART_matlab_visualizer_transmit((int16_t)(heading_raw*10.0),(int16_t)(heading_comp*10.0),0);
 		
 		/* Check for USART messages, start if 'k' */
 		if (USART_getNewBytes()>0){
 			uint8_t melding = USART_getRxMessage();
 			if (melding == 'k') {
 				isActive = 1;
-				USART_transmit(USART2, 0x02); // STX
+				// USART_transmit(USART2, 0x02); // STX
 			}
 			if (melding == 's'){
 				isActive = 0;
-				USART_transmit(USART2, 0x03); //ETX
+				// USART_transmit(USART2, 0x03); //ETX
 			}
 		}
 	} // end 10 hz loop.
-
 
 	/* 1 Hz loop */
 	if(counter_1_hz>99){
