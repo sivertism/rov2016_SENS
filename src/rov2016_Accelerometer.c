@@ -120,12 +120,13 @@ extern int16_t accelerometer_getRawData(uint8_t axis){
  * @retval The magnetometer data for the selected axis (float32).
  */
 extern float magnetometer_getData(uint8_t axis){
-	float temp = (float) ( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
-	fprintf('mx1: %d', temp);
+	int16_t temp_int  = (int16_t)( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
+	float temp = (float) temp_int;
 	switch (axis){
 		case MAGNETOMETER_X_AXIS:
+//				printf("mx1: %d", (int32_t)(temp));
 			temp = (temp + MAG_X_OFFSET)/MAG_X_SCALE;
-			fprintf('mx2: %d', temp);
+//				printf("mx2: %d",  (int32_t)(temp*1000.0));
 			break;
 		case MAGNETOMETER_Y_AXIS:
 			temp = (temp + MAG_Y_OFFSET)/MAG_Y_SCALE;

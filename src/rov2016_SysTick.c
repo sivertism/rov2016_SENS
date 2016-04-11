@@ -105,7 +105,7 @@ void SysTick_Handler(void){
 //		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
 
 		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
-//		USART_matlab_visualizer_transmit((int16_t)(mx_r*10000), (int16_t)(my_r*10000), (int16_t)(mz_r*10000));
+		USART_matlab_visualizer_transmit((int16_t)(mx_r*1000), (int16_t)(mx_c*1000), 0);
 
 		/* Transmit heading to matlab. */
 //		USART_matlab_visualizer_transmit((int16_t)(heading_raw*10.0),(int16_t)(heading_comp*10.0),0);

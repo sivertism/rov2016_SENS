@@ -17,11 +17,11 @@ static int16_t ax=0, ay=0, az=0;
 
 /* Funtion Prototypes --------------------------------------------------------*/
 void init(void);
-
 /* Funtion Definitions -------------------------------------------------------*/
 int main(void){
 	/* Initialization *********************************************************/
 	init();
+	printf("Init klar");
 	GPIOE->ODR = 0xFF00; // Turn off LED's
 	fmi_topside_xbox_ctrl = CAN_addRxFilter(TOP_XBOX_CTRLS);
 	fmi_topside_xbox_axes = CAN_addRxFilter(TOP_XBOX_AXES);
