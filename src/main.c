@@ -71,15 +71,15 @@ int main(void){
 
 		/* Update temperature for the MS5803 pressure sensor. */
 		if (flag_systick_update_ms5803_temp){
-			MS5803_updateDigital(MS5803_CONVERT_TEMPERATURE);
+//			MS5803_updateDigital(MS5803_CONVERT_TEMPERATURE);
 			flag_systick_update_ms5803_temp = 0;
 		}
 
 		/* Update depth[mm] and send to topside. */
 		if (flag_systick_update_depth){
-			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
-			depth = (float)MS5803_getPressure()*10;
-			CAN_transmitDepthTemp((uint16_t)depth, 0, 0);
+//			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
+//			depth = (float)MS5803_getPressure()*10;
+//			CAN_transmitDepthTemp((uint16_t)depth, 0, 0);
 			flag_systick_update_depth = 0;
 		}
 
