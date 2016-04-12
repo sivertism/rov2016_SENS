@@ -3,7 +3,7 @@ volatile extern uint8_t fmi_topside_xbox_ctrl;
 volatile extern uint8_t fmi_topside_xbox_axes;
 volatile extern uint8_t fmi_vesc_current_9;
 volatile extern uint8_t fmi_vesc_rpm_9;
-volatile extern uint8_t fmi_vesc_mosfet_temperature_9;
+volatile extern uint8_t fmi_vesc_mosfet_temperature_6;
 
 /* Global software flags */
 volatile extern uint8_t flag_systick_update_attitude;

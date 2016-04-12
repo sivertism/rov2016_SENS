@@ -3,7 +3,7 @@ volatile uint8_t fmi_topside_xbox_ctrl = 0;
 volatile uint8_t fmi_topside_xbox_axes = 0;
 volatile uint8_t fmi_vesc_current_9 = 0;
 volatile uint8_t fmi_vesc_rpm_9 = 0;
-volatile uint8_t fmi_vesc_mosfet_temperature_9 = 0;
+volatile uint8_t fmi_vesc_mosfet_temperature_6 = 0;
 
 /* Global software flags */
 volatile uint8_t flag_systick_update_heading = 0;
