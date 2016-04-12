@@ -81,18 +81,6 @@ void SysTick_Handler(void){
 		flag_systick_update_attitude = 1;
 		flag_systick_transmit_thrust = 1;
 		flag_systick_update_depth = 1;
-
-		/* Transmit a_x, a_y, a_z to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(ax*10), (int16_t)(ay*10), (int16_t)(az*10), (int16_t)(0u));
-
-		/* Transmit g_x, g_y, g_z x10000 to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(gx*10000), (int16_t)(gy*10000), (int16_t)(gz*10000), (int16_t)(0u));
-
-		/* Transmit m_x, m_y, m_z [milligauss] to matlab.*/
-//		USART_matlab_visualizer_transmit((int16_t)(mx), (int16_t)(my), (int16_t)(mz), (int16_t)(0u));
-
-		/* Transmit heading to matlab. */
-//		USART_matlab_visualizer_transmit((int16_t)(heading*10.0),0,0,0);
 		
 		/* Check for USART messages, start if 'k' */
 		if (USART_getNewBytes()>0){
