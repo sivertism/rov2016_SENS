@@ -25,8 +25,8 @@ int main(void){
 	GPIOE->ODR = 0xFF00; // Turn off LED's
 	fmi_topside_xbox_ctrl = CAN_addRxFilter(TOP_XBOX_CTRLS);
 	fmi_topside_xbox_axes = CAN_addRxFilter(TOP_XBOX_AXES);
-	fmi_vesc_current_9 = CAN_addRxFilter(VESC_CURRENT_BASE + 9);
-	fmi_vesc_rpm_9 = CAN_addRxFilter(VESC_RPM_BASE + 9);
+	fmi_vesc_current_9 = CAN_addRxFilter(VESC_CURRENT_BASE + 6);
+	fmi_vesc_rpm_9 = CAN_addRxFilter(VESC_RPM_BASE + 6);
 	fmi_vesc_mosfet_temperature_6 = CAN_addRxFilter(VESC_TEMP_VOLT_BASE + 6);
 
 	GPIOE->ODR = 0x0; // Turn off LED's

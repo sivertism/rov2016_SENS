@@ -373,8 +373,8 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
  * @retval 	None
  */
 extern void Interface_VESC_request_temp_volt(void){
-	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_MOSFET_TEMP);
-
+	temperature_check_counter = 6;
+	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_TEMP_VOLT);
 	/* Increment counter. */
 	if(temperature_check_counter < NUMBER_OF_VESCS){
 		temperature_check_counter++;
@@ -391,6 +391,7 @@ extern void Interface_VESC_request_temp_volt(void){
  * @retval 	None
  */
  extern void Interface_VESC_requestRPM(void){
+	rpm_check_counter=6;
  	Interface_VESC_requestData(rpm_check_counter, CAN_PACKET_GET_RPM);
 
  	/* Increment counter. */
