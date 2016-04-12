@@ -100,7 +100,7 @@ void SysTick_Handler(void){
 	/* 1 Hz loop */
 	if(counter_1_hz>99){
 		flag_systick_update_ms5803_temp = 1;
-		Interface_VESC_requestTemperature();
+		Interface_VESC_request_temp_volt();
 		CAN_transmitAlive();
 
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;

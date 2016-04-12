@@ -372,7 +372,7 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
  * @param	None
  * @retval 	None
  */
-extern void Interface_VESC_requestTemperature(void){
+extern void Interface_VESC_request_temp_volt(void){
 	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_MOSFET_TEMP);
 
 	/* Increment counter. */
