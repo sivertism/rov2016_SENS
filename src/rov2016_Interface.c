@@ -26,6 +26,7 @@ static uint8_t dataBuffer[8] = {0};
 static uint8_t counter_alive = 0;
 static uint8_t temperature_check_counter = 1;
 static uint8_t rpm_check_counter = 1;
+static uint8_t current_check_counter = 1;
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -373,7 +374,6 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
  * @retval 	None
  */
 extern void Interface_VESC_request_temp_volt(void){
-	temperature_check_counter = 6;
 	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_TEMP_VOLT);
 	/* Increment counter. */
 	if(temperature_check_counter < NUMBER_OF_VESCS){
@@ -391,7 +391,6 @@ extern void Interface_VESC_request_temp_volt(void){
  * @retval 	None
  */
  extern void Interface_VESC_requestRPM(void){
-	rpm_check_counter=6;
  	Interface_VESC_requestData(rpm_check_counter, CAN_PACKET_GET_RPM);
 
  	/* Increment counter. */
@@ -400,4 +399,21 @@ extern void Interface_VESC_request_temp_volt(void){
 	} else {
 		rpm_check_counter = 1;
 	}
+ }
+
+ /**
+  * @brief  Request current from VESC's incrementally
+  			one at a time. This function should be called every
+  			~10 milli second. Data is read by the topside system.
+  * @param	None
+  * @retval None
+  */
+ extern void Interface_VESC_requestCurrent(void){
+	 Interface_VESC_requestData(current_check_counter, CAN_PACKET_GET_CURRENT);
+
+		if(current_check_counter < NUMBER_OF_VESCS){
+			current_check_counter++;
+		} else {
+			current_check_counter = 1;
+		}
  }
