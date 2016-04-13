@@ -53,8 +53,8 @@ int main(void){
 			roll = AHRS_accelerometer_roll(ay, az);
 
 			if(!flag_systick_update_heading){
-			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
-				(uint16_t)(heading*10));
+//			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
+//				(uint16_t)(heading*10));
 			}
 
 			flag_systick_update_attitude = 0;
@@ -63,30 +63,31 @@ int main(void){
 		/* Calculate heading and transmit pitch, roll, heading to topside. */
 		if(flag_systick_update_heading){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
-			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
-				(uint16_t)(heading*10));
+//			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
+//				(uint16_t)(heading*10));
 
 			flag_systick_update_heading = 0;
 		}
 
 		/* Update temperature for the MS5803 pressure sensor. */
 		if (flag_systick_update_ms5803_temp){
-//			MS5803_updateDigital(MS5803_CONVERT_TEMPERATURE);
+			MS5803_updateDigital(MS5803_CONVERT_TEMPERATURE);
 			flag_systick_update_ms5803_temp = 0;
 		}
 
 		/* Update depth[mm] and send to topside. */
 		if (flag_systick_update_depth){
-//			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
-//			depth = (float)MS5803_getPressure()*10;
+			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
+			depth = (float)MS5803_getPressure()*10;
+			printf("Depth:%d",MS5803_getPressure());
 //			CAN_transmitDepthTemp((uint16_t)depth, 0, 0);
 			flag_systick_update_depth = 0;
 		}
 
 		/* Transmit duty cycle to thrusters. */
 		if (flag_systick_transmit_thrust){
-			int16_t* controller_vals = Interface_readController();
-			Interface_transmitManualThrust();
+//			int16_t* controller_vals = Interface_readController();
+//			Interface_transmitManualThrust();
 			flag_systick_transmit_thrust = 0;
 		}
 
