@@ -17,7 +17,7 @@
 /* Global variables --------------------------------------------------------------------*/
 
 /* Private Function Prototypes ----------------------------------------------------------*/
-static void bias_compensation(void);
+
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t receive_buffer[6] = {0};
 static uint8_t new_values = 0;
@@ -123,7 +123,7 @@ extern float gyroscope_getRPS(uint8_t axis){
  * @param	None
  * @retval	None
  */
-static void bias_compensation(void){
+extern void gyroscope_bias_compensation(void){
 	int32_t x_temp=0,y_temp=0,z_temp=0;
 	volatile uint8_t i = 0;
 	volatile uint32_t j = 0;

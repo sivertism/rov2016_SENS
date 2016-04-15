@@ -100,7 +100,7 @@ void ADC1_2_IRQHandler(void){
  * @retval 	None
  */
 void ADC4_IRQHandler(void){
-	ADC_buffer[6] = (30000*ADC_GetConversionValue(ADC4))/4096;
+	ADC_buffer[5] = (30000*ADC_GetConversionValue(ADC4))/4096;
 	/* Indicate to the main-loop that there is a new measurement available.*/
 	new_values |= (1u << 4);
 //	GPIOE->ODR ^= (STATUS_LED7 << 8);

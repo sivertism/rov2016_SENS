@@ -1,9 +1,7 @@
 /* CANBUS filter match indexes. (FMI) */
 volatile extern uint8_t fmi_topside_xbox_ctrl;
 volatile extern uint8_t fmi_topside_xbox_axes;
-volatile extern uint8_t fmi_vesc_current_9;
-volatile extern uint8_t fmi_vesc_rpm_9;
-volatile extern uint8_t fmi_vesc_mosfet_temperature_6;
+volatile extern uint8_t fmi_topside_sens_ctrl;
 
 /* Global software flags */
 volatile extern uint8_t flag_systick_update_attitude;
@@ -11,6 +9,8 @@ volatile extern uint8_t flag_systick_update_heading;
 volatile extern uint8_t flag_systick_transmit_thrust;
 volatile extern uint8_t flag_systick_update_depth;
 volatile extern uint8_t flag_systick_update_ms5803_temp;
+volatile extern uint8_t flag_systick_calibrate_gyro;
+volatile extern uint8_t flag_systick_zero_pressure;
 
 /* Status LED's */
 extern const uint8_t MAIN_LOOP_LED;
