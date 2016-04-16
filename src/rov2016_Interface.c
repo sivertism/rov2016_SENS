@@ -245,8 +245,8 @@ extern void Interface_transmitManualThrust(void){
 	float pitchthrust = (float)controller_data[5]/1000.0f;
 	th1 += pitchthrust;
 	th2 -= pitchthrust;
-	th3 += pitchthrust;
-	th4 -= pitchthrust;
+	th3 -= pitchthrust;
+	th4 += pitchthrust;
 
 	/* Thruster 5-8 (sideways thrust) ***************************************************************/
 	float swaythrust = (float)controller_data[2]/1000.0f;

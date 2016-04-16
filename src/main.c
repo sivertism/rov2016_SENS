@@ -35,17 +35,17 @@ int main(void){
 	/* Main loop **************************************************************/
 	while(1){
 
-		/* Calibrate gyroscope. */
-		if (flag_systick_calibrate_gyro){
-			gyroscope_bias_compensation();
-			CAN_deleteRxByte(fmi_topside_sens_ctrl, 0);
-		}
-
-		/* Zero depth */
-		if (flag_systick_zero_pressure){
-			surface_pressure = current_pressure;
-			CAN_deleteRxByte(fmi_topside_sens_ctrl, 1);
-		}
+//		/* Calibrate gyroscope. */
+//		if (flag_systick_calibrate_gyro){
+//			gyroscope_bias_compensation();
+//			CAN_deleteRxByte(fmi_topside_sens_ctrl, 0);
+//		}
+//
+//		/* Zero depth */
+//		if (flag_systick_zero_pressure){
+//			surface_pressure = current_pressure;
+//			CAN_deleteRxByte(fmi_topside_sens_ctrl, 1);
+//		}
 
 		/* Calculate pitchand roll and transmit via CAN-bus */
 		if (flag_systick_update_attitude){
