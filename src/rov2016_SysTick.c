@@ -73,6 +73,11 @@ void SysTick_Handler(void){
 	/* Check for messages from topside and set LED's accordingly. */
 	if(CAN_getRxMessages()>0){
 		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
+
+		if(buttons_1 & 0x1) VESC_setDutyCycle(ESC_ID_9, 0.20f);
+		else if(buttons_1 & 0x2) VESC_setDutyCycle(ESC_ID_9, -0.20f);
+		else VESC_setDutyCycle(ESC_ID_9, 0);
+
 		GPIOE->ODR = (uint16_t)buttons_1 << 12;
 	}
 
