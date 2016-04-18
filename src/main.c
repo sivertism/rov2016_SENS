@@ -13,6 +13,7 @@
 static float mx=0.0, my=0.0, mz=0.0;
 static float heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
+static uint16_t int_temp = 0;
 static int16_t ax=0, ay=0, az=0;
 static int32_t surface_pressure = 9800;
 static int32_t current_pressure = 0;
@@ -90,12 +91,13 @@ int main(void){
 			flag_systick_update_ms5803_temp = 0;
 		}
 
-		/* Update depth[mm] and send to topside. */
+		/* Update and send depth[mm] and internal temperature [celsius] to topside. */
 		if (flag_systick_update_depth){
 			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
 			current_pressure = MS5803_getPressure();
 			depth = (current_pressure - surface_pressure)*10;
-			CAN_transmitDepthTemp((uint16_t)depth, 0, 0);
+			int_temp = ADC_getInternalTemperature();
+			CAN_transmitDepthTemp((uint16_t)depth, int_temp, 0);
 			flag_systick_update_depth = 0;
 		}
 
