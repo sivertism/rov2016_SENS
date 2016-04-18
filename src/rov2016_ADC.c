@@ -275,7 +275,7 @@ void ADC_init(void){
 						|(DMA_CCR_TCIE);	// Enable interrupt on Transfer Complete
 	//DMA1_Channel1->CCR |= 0b010010110100010;
 
-	/* DMA2 Channel 2, connected to ADC1. */
+	/* DMA2 Channel 2, connected to ADC4. */
 	DMA_DeInit(DMA2_Channel2);
 	DMA2_Channel2->CPAR = ((uint32_t)&(ADC4->DR)); 	// Source register (periph)
 	DMA2_Channel2->CMAR = (uint32_t)&ADC_buffer[5]; // Destination register (memory)
