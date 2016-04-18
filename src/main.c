@@ -13,6 +13,7 @@
 static float gx=0.0f, gy=0.0f, gz=0.0f, mx=0.0, my=0.0, mz=0.0;
 static float heading = 0.0f, pitch=0.0f, roll=0.0f;
 static float depth = 0.0f;
+static int16_t int_temp = 0;
 static int16_t ax=0, ay=0, az=0;
 
 /* Funtion Prototypes --------------------------------------------------------*/
@@ -27,7 +28,7 @@ int main(void){
 	fmi_topside_xbox_axes = CAN_addRxFilter(TOP_XBOX_AXES);
 	fmi_vesc_current_9 = CAN_addRxFilter(VESC_CURRENT_BASE + 9);
 	fmi_vesc_rpm_9 = CAN_addRxFilter(VESC_RPM_BASE + 9);
-	fmi_vesc_mosfet_temperature_9 = CAN_addRxFilter(VESC_MOSFET_TEMP_BASE + 9);
+	fmi_vesc_mosfet_temperature_9 = CAN_addRxFilter(VESC_TEMP_VOLT_BASE + 9);
 
 	GPIOE->ODR = 0x0; // Turn off LED's
 	/* Private vars ***********************************************************/
@@ -65,7 +66,6 @@ int main(void){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
 				(uint16_t)(heading*10));
-
 			flag_systick_update_heading = 0;
 		}
 
@@ -79,6 +79,7 @@ int main(void){
 		if (flag_systick_update_depth){
 			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
 			depth = (float)MS5803_getPressure()*10;
+			int_temp = ADC_getInternalTemperature();
 			CAN_transmitDepthTemp((uint16_t)depth, 0, 0);
 			flag_systick_update_depth = 0;
 		}

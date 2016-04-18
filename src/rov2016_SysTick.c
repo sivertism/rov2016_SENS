@@ -102,7 +102,6 @@ void SysTick_Handler(void){
 		flag_systick_update_ms5803_temp = 1;
 		Interface_VESC_requestTemperature();
 		CAN_transmitAlive();
-
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
 	}// end 1 Hz loop.
