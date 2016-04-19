@@ -308,15 +308,15 @@ extern void Interface_transmitManualThrust(void){
 	}
 
 	/* Send thrust to ESC's. */
-	VESC_setDutyCycle(1, th1);
-	VESC_setDutyCycle(2, th2);
-	VESC_setDutyCycle(3, th3);
-	VESC_setDutyCycle(4, th4);
+	VESC_setDutyCycle(1, th1/5.0);
+	VESC_setDutyCycle(2, th2/5.0);
+	VESC_setDutyCycle(3, th3/5.0);
+	VESC_setDutyCycle(4, th4/5.0);
 
-	VESC_setDutyCycle(5, th5);
-	VESC_setDutyCycle(6, th6);
-	VESC_setDutyCycle(7, th7);
-	VESC_setDutyCycle(8, th8);
+	VESC_setDutyCycle(5, th5/5.0);
+	VESC_setDutyCycle(6, th6/5.0);
+	VESC_setDutyCycle(7, th7/5.0);
+	VESC_setDutyCycle(8, th8/5.0);
 }
 
 /**
