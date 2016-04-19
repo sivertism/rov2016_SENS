@@ -56,10 +56,10 @@ extern void SysTick_init(void) {
 			| SysTick_CTRL_CLKSOURCE_Msk);
 } // end Systick_init()
 
-
 /**
- * @brief  Configures the CAN-Controller peripheral for 500 kbps communication.
- * 		   Also configures Rx filters according to ID's specified in "can_metoder.h"
+ * @brief ****************************************************************
+ * ***********************************************************************
+ * ***********************************************************************
  * @param  None
  * @retval None
  */
@@ -74,8 +74,8 @@ void SysTick_Handler(void){
 	if(CAN_getRxMessages()>0){
 		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
 
-		if(buttons_1 & 0x1) VESC_setDutyCycle(ESC_ID_9, 0.94f);
-		else if(buttons_1 & 0x2) VESC_setDutyCycle(ESC_ID_9, -0.94f);
+		if(buttons_1 & 0x1) VESC_setDutyCycle(ESC_ID_9, 0.5f);
+		else if(buttons_1 & 0x2) VESC_setDutyCycle(ESC_ID_9, -0.5f);
 		else VESC_setDutyCycle(ESC_ID_9, 0);
 
 		GPIOE->ODR = (uint16_t)buttons_1 << 12;
@@ -111,11 +111,11 @@ void SysTick_Handler(void){
 		}
 	} // end 10 hz loop.
 
-
 	/* 1 Hz loop */
 	if(counter_1_hz>99){
 		flag_systick_update_ms5803_temp = 1;
 		Interface_VESC_request_temp_volt();
+		flag_systick_update_heading = 1;
 
 		CAN_transmitAlive();
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;

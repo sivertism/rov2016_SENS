@@ -107,7 +107,6 @@ int main(void){
 			Interface_transmitManualThrust();
 			flag_systick_transmit_thrust = 0;
 		}
-
 	} // end while
 } // end main
 

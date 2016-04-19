@@ -140,7 +140,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 
 	uint32_t id = (uint32_t)(CAN_PACKET_SET_DUTY << 8) | esc_id;
 
-	int32_t temp_duty = (int32_t)(duty * 100000.0f);
+	int32_t temp_duty = (int32_t)((duty * 100000.0f)/5);
 
 	uint8_t buffer[4];
 	buffer[0] = temp_duty >> 24;	// MSB(Most significant byte).
@@ -308,15 +308,15 @@ extern void Interface_transmitManualThrust(void){
 	}
 
 	/* Send thrust to ESC's. */
-	VESC_setDutyCycle(1, th1/5.0);
-	VESC_setDutyCycle(2, th2/5.0);
-	VESC_setDutyCycle(3, th3/5.0);
-	VESC_setDutyCycle(4, th4/5.0);
+	VESC_setDutyCycle(1, th1);
+	VESC_setDutyCycle(2, th2);
+	VESC_setDutyCycle(3, th3);
+	VESC_setDutyCycle(4, th4);
 
-	VESC_setDutyCycle(5, th5/5.0);
-	VESC_setDutyCycle(6, th6/5.0);
-	VESC_setDutyCycle(7, th7/5.0);
-	VESC_setDutyCycle(8, th8/5.0);
+	VESC_setDutyCycle(5, th5);
+	VESC_setDutyCycle(6, th6);
+	VESC_setDutyCycle(7, th7);
+	VESC_setDutyCycle(8, th8);
 }
 
 /**
