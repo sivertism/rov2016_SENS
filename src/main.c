@@ -41,12 +41,13 @@ int main(void){
 //			gyroscope_bias_compensation();
 //			CAN_deleteRxByte(fmi_topside_sens_ctrl, 0);
 //		}
-//
-//		/* Zero depth */
-//		if (flag_systick_zero_pressure){
-//			surface_pressure = current_pressure;
-//			CAN_deleteRxByte(fmi_topside_sens_ctrl, 1);
-//		}
+
+		/* Zero depth */
+		if (flag_systick_zero_pressure){
+			surface_pressure = current_pressure;
+			CAN_deleteRxByte(fmi_topside_sens_ctrl, 1);
+			flag_systick_zero_pressure = 0;
+		}
 
 		/* Calculate pitchand roll and transmit via CAN-bus */
 		if (flag_systick_update_attitude){
@@ -54,16 +55,24 @@ int main(void){
 			magnetometer_updateValue();
 			//gyroscope_updateValue();
 
-			ax = (float) accelerometer_getRawData(ACCELEROMETER_X_AXIS);
-			ay = (float) accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
-			az = (float) accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
+			ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
+			ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
+			az = accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
 
 			mx = (float) magnetometer_getData(MAGNETOMETER_X_AXIS);
 			my = (float) magnetometer_getData(MAGNETOMETER_Y_AXIS);
 			mz = (float) magnetometer_getData(MAGNETOMETER_Z_AXIS);
 
 			/* Sensor axes -> rov-axes.*/
+			int16_t temp = ax;
+			ax = ay;
+			ay = az;
+			az = temp;
 
+			float temp2 = mx;
+			mx = my;
+			my = mz;
+			mz = temp2;
 
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
@@ -81,7 +90,6 @@ int main(void){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
 			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
 				(uint16_t)(heading*10));
-
 			flag_systick_update_heading = 0;
 		}
 
@@ -95,9 +103,10 @@ int main(void){
 		if (flag_systick_update_depth){
 			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
 			current_pressure = MS5803_getPressure();
-			depth = (current_pressure - surface_pressure)*10;
+			depth = ((current_pressure - surface_pressure)*9823)/(10*1000);
+			uint16_t pressure_temp = (uint16_t) MS5803_getTemperature();
 			int_temp = ADC_getInternalTemperature();
-			CAN_transmitDepthTemp((uint16_t)depth, int_temp, 0);
+			CAN_transmitDepthTemp((uint16_t)depth, int_temp, 0, pressure_temp);
 			flag_systick_update_depth = 0;
 		}
 
