@@ -1,17 +1,21 @@
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f30x.h"
 #include "stm32f30x_gpio.h"
 #include "rov2016_canbus.h"
 #include "rov2016_Interface.h"
 #include "rov2016_Accelerometer.h"
 #include "rov2016_SPI.h"
+#include <math.h>
+#include <stdint.h>
 
 
 /* GLOBAL VARIABLES ----------------------------------------------------------*/
 #include "def_global_vars.h"
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
-static int16_t mx=0.0, my=0.0, mz=0.0;
-static float heading = 0.0f, pitch=0.0f, roll=0.0f;
+static int32_t mx=0.0f, my=0.0f, mz=0.0f;
+static int16_t mx_raw=0, my_raw=0, mz_raw=0;
+static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
 static uint16_t int_temp = 0;
 static int16_t ax=0, ay=0, az=0;
@@ -64,43 +68,49 @@ int main(void){
 			my = magnetometer_getData(MAGNETOMETER_Y_AXIS);
 			mz = magnetometer_getData(MAGNETOMETER_Z_AXIS);
 
+			mx_raw = magnetometer_getRawData(MAGNETOMETER_X_AXIS);
+			my_raw = magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
+			mz_raw = magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
 
 			/* Sensor axes -> rov-axes.*/
 			int16_t temp = ax;
-			ax = ay;
-			ay = az;
-			az = temp;
+			ax = -az;
+			az = -ay;
+			ay = temp;
 
 			float temp2 = mx;
-			mx = my;
-			my = mz;
-			mz = temp2;
+			mx = -mz;
+			mz = -my;
+			my = temp2;
 
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
 
 			//***********
-			CAN_transmitQuaternions(mx, my, mz, 0); // sender rå magnetometerverdier
+			CAN_transmitQuaternions(mx_raw, my_raw, mz_raw, 0); // sender rå magnetometerverdier
 
-			uint8_t acc_array[6] = {(uint8_t)(ax >> 8), (uint8_t)(ax & 0xFF00), (uint8_t)(ay >> 8),
-					(uint8_t)(ay & 0xFF00), (uint8_t)(az >> 8), (uint8_t)(az & 0xFF00)};
+			uint8_t acc_array[6] = {(uint8_t)(ax >> 8),
+									(uint8_t)(ax & 0xFF),
+									(uint8_t)(ay >> 8),
+									(uint8_t)(ay & 0xFF),
+									(uint8_t)(az >> 8),
+									(uint8_t)(az & 0xFF)};
 
 			CAN_transmitAcceleration(acc_array);
 			//***********
 
 			if(!flag_systick_update_heading){
-			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
-				(uint16_t)(heading*10));
+			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
+				(uint16_t)(heading/10));
 			}
-
 			flag_systick_update_attitude = 0;
 		}
 
 		/* Calculate heading and transmit pitch, roll, heading to topside. */
 		if(flag_systick_update_heading){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
-			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
-				(uint16_t)(heading*10));
+			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
+				(uint16_t)(heading/10));
 			flag_systick_update_heading = 0;
 		}
 
@@ -115,9 +125,10 @@ int main(void){
 			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
 			current_pressure = MS5803_getPressure();
 			depth = ((current_pressure - surface_pressure)*9823)/(10*1000);
+			if(depth < 0) depth = 0;
 			uint16_t pressure_temp = (uint16_t) MS5803_getTemperature();
 			int_temp = ADC_getInternalTemperature();
-			CAN_transmitDepthTemp((uint16_t)depth, int_temp, 0, pressure_temp);
+			CAN_transmitDepthTemp((int16_t)depth, int_temp, 0, pressure_temp);
 			flag_systick_update_depth = 0;
 		}
 

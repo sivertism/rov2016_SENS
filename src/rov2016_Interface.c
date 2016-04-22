@@ -108,7 +108,7 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
  * @param  Pitch, roll, yaw, heading in 0.1 degrees.
  * @retval None
  */
- extern void CAN_transmitDepthTemp(uint16_t depth, uint16_t int_temp, uint16_t manip_temp, uint16_t pressure_temp){
+ extern void CAN_transmitDepthTemp(int16_t depth, uint16_t int_temp, uint16_t manip_temp, uint16_t pressure_temp){
  	dataBuffer[0] = (uint8_t)(depth >> 8u);
  	dataBuffer[1] = (uint8_t)(depth & 0xFF);
  	dataBuffer[2] = (uint8_t)(int_temp >> 8u);

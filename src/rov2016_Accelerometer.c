@@ -119,23 +119,32 @@ extern int16_t accelerometer_getRawData(uint8_t axis){
  * @param  uint8_t axis - The wanted axis, X=0, Y=1, Z=2
  * @retval The magnetometer data for the selected axis (float32).
  */
-extern int16_t magnetometer_getData(uint8_t axis){
+extern int32_t magnetometer_getData(uint8_t axis){
 	int16_t temp_int  = (int16_t)( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
-//	float temp = (float) temp_int;
-//	switch (axis){
-//		case MAGNETOMETER_X_AXIS:
-//			temp = (temp + MAG_X_OFFSET)/MAG_X_SCALE;
-//			break;
-//		case MAGNETOMETER_Y_AXIS:
-//			temp = (temp + MAG_Y_OFFSET)/MAG_Y_SCALE;
-//			break;
-//		case MAGNETOMETER_Z_AXIS:
-//			temp = (temp + MAG_Z_OFFSET)/MAG_Z_SCALE;
-//			break;
-//	}
-	return temp_int;
+	float temp = (float) temp_int;
+	switch (axis){
+		case MAGNETOMETER_X_AXIS:
+			temp = (temp + MAG_X_OFFSET)/MAG_X_SCALE;
+			break;
+		case MAGNETOMETER_Y_AXIS:
+			temp = (temp + MAG_Y_OFFSET)/MAG_Y_SCALE;
+			break;
+		case MAGNETOMETER_Z_AXIS:
+			temp = (temp + MAG_Z_OFFSET)/MAG_Z_SCALE;
+			break;
+	}
+	return (int32_t) (temp*100.0f);
 }
 
+/**
+ * @brief  Returns uncalibrated magnetometer data for the selected axis.
+ * @param  uint8_t axis - The wanted axis, X=0, Y=1, Z=2
+ * @retval The magnetometer data for the selected axis (float32).
+ */
+extern int16_t magnetometer_getRawData(uint8_t axis){
+	int16_t temp_int  = (int16_t)( ((uint16_t)magnetometer_receive_buffer[2*axis+1] << 8) | magnetometer_receive_buffer[2*axis]);
+	return temp_int;
+}
 
 /**
  * @brief   Returns a variable indicating unread accelerometer/magnetometer values.
