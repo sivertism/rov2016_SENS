@@ -10,7 +10,7 @@
 #include "def_global_vars.h"
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
-static float mx=0.0, my=0.0, mz=0.0;
+static int16_t mx=0.0, my=0.0, mz=0.0;
 static float heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
 static uint16_t int_temp = 0;
@@ -28,6 +28,7 @@ int main(void){
 	GPIOE->ODR = 0xFF00; // Turn off LED's
 	fmi_topside_xbox_ctrl = CAN_addRxFilter(TOP_XBOX_CTRLS);
 	fmi_topside_xbox_axes = CAN_addRxFilter(TOP_XBOX_AXES);
+	fmi_topside_sens_ctrl = CAN_addRxFilter(TOP_SENS_CTRL);
 
 
 	GPIOE->ODR = 0x0; // Turn off LED's
@@ -59,9 +60,10 @@ int main(void){
 			ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
 			az = accelerometer_getRawData(ACCELEROMETER_Z_AXIS);
 
-			mx = (float) magnetometer_getData(MAGNETOMETER_X_AXIS);
-			my = (float) magnetometer_getData(MAGNETOMETER_Y_AXIS);
-			mz = (float) magnetometer_getData(MAGNETOMETER_Z_AXIS);
+			mx = magnetometer_getData(MAGNETOMETER_X_AXIS);
+			my = magnetometer_getData(MAGNETOMETER_Y_AXIS);
+			mz = magnetometer_getData(MAGNETOMETER_Z_AXIS);
+
 
 			/* Sensor axes -> rov-axes.*/
 			int16_t temp = ax;
@@ -76,6 +78,15 @@ int main(void){
 
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
+
+			//***********
+			CAN_transmitQuaternions(mx, my, mz, 0); // sender rå magnetometerverdier
+
+			uint8_t acc_array[6] = {(uint8_t)(ax >> 8), (uint8_t)(ax & 0xFF00), (uint8_t)(ay >> 8),
+					(uint8_t)(ay & 0xFF00), (uint8_t)(az >> 8), (uint8_t)(az & 0xFF00)};
+
+			CAN_transmitAcceleration(acc_array);
+			//***********
 
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(pitch*10), (int16_t)(roll*10), (int16_t)(heading*10), \
