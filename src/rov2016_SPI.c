@@ -135,9 +135,6 @@ extern void SPI2_Init(void){
  * @retval 	None
  */
 extern void MS5803_Init(void){
-#ifdef DEBUG_MODE
-	printf("Initiating MS5803...");
-#endif
 
 	buffer_pos = 0;
 

@@ -12,7 +12,8 @@
 
 /* Include------------------------------------------------------------------------------*/
 #include "stm32f30x.h"
-#include "math.h"
+#include <math.h>
+#include <stdint.h>
 
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
@@ -95,15 +96,17 @@ float AHRS_magnetometer_heading(float mx, float my, float mz){
  * @retval 	Pitch value in degrees.
  */
 
-extern float AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
-	float f_ax_g = (float)ax/1000.0;
-	float f_ay_g = (float)ay/1000.0;
-	float f_az_g = (float)az/1000.0;
+extern int32_t AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
+	float f_ax_g = ((float)ax)/1000.0;
+	float f_ay_g = ((float)ay)/1000.0;
+	float f_az_g = ((float)az)/1000.0;
 
 	float ayz_abs = sqrtf(f_ay_g*f_ay_g + f_az_g*f_az_g);
-
 	float pitch_rad = -atan2f(f_ax_g, ayz_abs);
-	return pitch_rad*180/PI;
+
+	/* Rad -> deg */
+	pitch_rad = pitch_rad*180.0/PI;
+	return (int32_t)(pitch_rad*100.0f);
 }
 
 /**
@@ -112,12 +115,12 @@ extern float AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
  * @retval 	Roll value in degrees.
  */
 
-extern float AHRS_accelerometer_roll(int16_t ay, int16_t az){
-	float f_ay_g = (float)ay/1000.0;
-	float f_az_g = (float)az/1000.0;
+extern int32_t AHRS_accelerometer_roll(int16_t ay, int16_t az){
+	float f_ay_g = ((float)ay)/1000.0;
+	float f_az_g = ((float)az)/1000.0;
 
 	if (f_az_g == 0) return 0.0f;
-	return atan2(f_ay_g, f_az_g)*180/PI;
+	return (int32_t)((atan2(f_ay_g, f_az_g)*180.0/PI)*100.0f);
 }
 
 /**
@@ -126,21 +129,27 @@ extern float AHRS_accelerometer_roll(int16_t ay, int16_t az){
  * @param	float mx, my, mz accelerometerdata in 3D.
  * @retval 	Roll value in degrees.
  */
-extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, float my, float mz){
+extern int32_t AHRS_tilt_compensated_heading(int32_t pitch, int32_t roll, int32_t mx, int32_t my, int32_t mz){
+
+	float pitch_f = ((float)pitch)/100.0f;
+	float roll_f = ((float)roll)/100.0f;
+	float mx_f = ((float)mx)/100.0f;
+	float my_f = ((float)my)/100.0f;
+	float mz_f = ((float)mz)/100.0f;
 	/* Normalize magnetometer readings. */
-	float magnetometer_magnitude = sqrtf(mx*mx + my*my + mz*mz);
+	float magnetometer_magnitude = sqrtf(mx_f*mx_f + my_f*my_f + mz_f*mz_f);
 	float mx_norm, my_norm, mz_norm;
-	mx_norm = mx/magnetometer_magnitude;
-	my_norm = my/magnetometer_magnitude;
-	mz_norm = mz/magnetometer_magnitude;
+	mx_norm = mx_f/magnetometer_magnitude;
+	my_norm = my_f/magnetometer_magnitude;
+	mz_norm = mz_f/magnetometer_magnitude;
 
 	/* Calculate tilt compensated magnetic sensor measurements mx_2, my_2, mz_2 based on eq. 12 from
 	 * STM's AN3192, Appendix A.2.
 	 */
-	float sinpitch = sinf(pitch*PI/180);
-	float cospitch = cosf(pitch*PI/180);
-	float sinroll = sinf(roll*PI/180);
-	float cosroll = cosf(roll*PI/180);
+	float sinpitch = sinf(pitch_f*PI/180);
+	float cospitch = cosf(pitch_f*PI/180);
+	float sinroll = sinf(roll_f*PI/180);
+	float cosroll = cosf(roll_f*PI/180);
 
 	float mx_2, my_2;
 	mx_2 = mx_norm*cospitch + mz_norm*sinpitch;
@@ -176,7 +185,7 @@ extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, fl
 		heading = atan(my_2/mx_2) + PI;
 		break;
 	case QUADRANT_4:
-		heading = atan(my/mx) + 2*PI;
+		heading = atan(my_f/mx_f) + 2*PI;
 		break;
 	default:
 		heading = -2.0f;
@@ -188,7 +197,10 @@ extern float AHRS_tilt_compensated_heading(float pitch, float roll, float mx, fl
 	if((mx_2 == 0) && (my_2<0)) heading = 90.0;
 	if((mx_2 == 0) && (my_2>0)) heading = 270.0;
 
-	return heading;
+	if(heading < 180) heading += 180;
+	else heading -= 180;
+
+	return (int32_t)(heading*100.0f);
 }
 
 extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz){

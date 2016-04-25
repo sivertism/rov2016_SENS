@@ -56,10 +56,10 @@ extern void SysTick_init(void) {
 			| SysTick_CTRL_CLKSOURCE_Msk);
 } // end Systick_init()
 
-
 /**
- * @brief  Configures the CAN-Controller peripheral for 500 kbps communication.
- * 		   Also configures Rx filters according to ID's specified in "can_metoder.h"
+ * @brief ****************************************************************
+ * ***********************************************************************
+ * ***********************************************************************
  * @param  None
  * @retval None
  */
@@ -68,11 +68,26 @@ void SysTick_Handler(void){
 	counter_1_hz++;
 
 	Interface_VESC_requestRPM();
+	Interface_VESC_requestCurrent();
 
 	/* Check for messages from topside and set LED's accordingly. */
 	if(CAN_getRxMessages()>0){
 		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
+
+		if(buttons_1 & 0x1) VESC_setDutyCycle(ESC_ID_9, 0.6f);
+		else if(buttons_1 & 0x2) VESC_setDutyCycle(ESC_ID_9, -0.6f);
+		else VESC_setDutyCycle(ESC_ID_9, 0);
+
 		GPIOE->ODR = (uint16_t)buttons_1 << 12;
+	}
+
+	/* Check for control bytes from topside and set flags accordingly.*/
+	if(CAN_getByteFromMessage(fmi_topside_sens_ctrl,0)){
+		flag_systick_calibrate_gyro = 1;
+	}
+
+	if(CAN_getByteFromMessage(fmi_topside_sens_ctrl, 1)){
+		flag_systick_zero_pressure = 1;
 	}
 
 	/* 10 Hz loop */
@@ -96,13 +111,13 @@ void SysTick_Handler(void){
 		}
 	} // end 10 hz loop.
 
-
 	/* 1 Hz loop */
 	if(counter_1_hz>99){
 		flag_systick_update_ms5803_temp = 1;
-		Interface_VESC_requestTemperature();
-		CAN_transmitAlive();
+		Interface_VESC_request_temp_volt();
+		flag_systick_update_heading = 1;
 
+		CAN_transmitAlive();
 		GPIOE->ODR ^= (uint16_t)SYSTICK_LED << 8;
 		counter_1_hz = 0;
 	}// end 1 Hz loop.

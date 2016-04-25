@@ -26,6 +26,7 @@ static uint8_t dataBuffer[8] = {0};
 static uint8_t counter_alive = 0;
 static uint8_t temperature_check_counter = 1;
 static uint8_t rpm_check_counter = 1;
+static uint8_t current_check_counter = 1;
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -107,15 +108,17 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
  * @param  Pitch, roll, yaw, heading in 0.1 degrees.
  * @retval None
  */
- extern void CAN_transmitDepthTemp(uint16_t depth, uint16_t int_temp, uint16_t manip_temp){
+ extern void CAN_transmitDepthTemp(int16_t depth, uint16_t int_temp, uint16_t manip_temp, uint16_t pressure_temp){
  	dataBuffer[0] = (uint8_t)(depth >> 8u);
  	dataBuffer[1] = (uint8_t)(depth & 0xFF);
  	dataBuffer[2] = (uint8_t)(int_temp >> 8u);
  	dataBuffer[3] = (uint8_t)(int_temp & 0xFF);
  	dataBuffer[4] = (uint8_t)(manip_temp >> 8u);
  	dataBuffer[5] = (uint8_t)(manip_temp & 0xFF);
+ 	dataBuffer[6] = (uint8_t)(pressure_temp >> 8u);
+ 	dataBuffer[7] = (uint8_t)(pressure_temp & 0xFF);
 
- 	CAN_transmitBuffer(SENSOR_DEPTH_TEMP, dataBuffer, 6, CAN_ID_STD);
+ 	CAN_transmitBuffer(SENSOR_DEPTH_TEMP, dataBuffer, 8, CAN_ID_STD);
 }
 
 /**
@@ -139,7 +142,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 
 	uint32_t id = (uint32_t)(CAN_PACKET_SET_DUTY << 8) | esc_id;
 
-	int32_t temp_duty = (int32_t)(duty * 100000.0f);
+	int32_t temp_duty = (int32_t)((duty * 100000.0f)/6);
 
 	uint8_t buffer[4];
 	buffer[0] = temp_duty >> 24;	// MSB(Most significant byte).
@@ -244,8 +247,8 @@ extern void Interface_transmitManualThrust(void){
 	float pitchthrust = (float)controller_data[5]/1000.0f;
 	th1 += pitchthrust;
 	th2 -= pitchthrust;
-	th3 += pitchthrust;
-	th4 -= pitchthrust;
+	th3 -= pitchthrust;
+	th4 += pitchthrust;
 
 	/* Thruster 5-8 (sideways thrust) ***************************************************************/
 	float swaythrust = (float)controller_data[2]/1000.0f;
@@ -372,9 +375,8 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
  * @param	None
  * @retval 	None
  */
-extern void Interface_VESC_requestTemperature(void){
-	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_MOSFET_TEMP);
-
+extern void Interface_VESC_request_temp_volt(void){
+	Interface_VESC_requestData(temperature_check_counter, CAN_PACKET_GET_TEMP_VOLT);
 	/* Increment counter. */
 	if(temperature_check_counter < NUMBER_OF_VESCS){
 		temperature_check_counter++;
@@ -399,4 +401,21 @@ extern void Interface_VESC_requestTemperature(void){
 	} else {
 		rpm_check_counter = 1;
 	}
+ }
+
+ /**
+  * @brief  Request current from VESC's incrementally
+  			one at a time. This function should be called every
+  			~10 milli second. Data is read by the topside system.
+  * @param	None
+  * @retval None
+  */
+ extern void Interface_VESC_requestCurrent(void){
+	 Interface_VESC_requestData(current_check_counter, CAN_PACKET_GET_CURRENT);
+
+		if(current_check_counter < NUMBER_OF_VESCS){
+			current_check_counter++;
+		} else {
+			current_check_counter = 1;
+		}
  }
