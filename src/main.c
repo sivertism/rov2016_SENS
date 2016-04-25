@@ -5,6 +5,7 @@
 #include "rov2016_Interface.h"
 #include "rov2016_Accelerometer.h"
 #include "rov2016_SPI.h"
+#include "rov2016_ADC.h"
 #include "main.h"
 #include <math.h>
 #include <stdint.h>
@@ -18,7 +19,7 @@ static int32_t mx=0.0f, my=0.0f, mz=0.0f;
 static int16_t mx_raw=0, my_raw=0, mz_raw=0;
 static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
-static uint16_t int_temp = 0;
+static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
 static int16_t ax=0, ay=0, az=0;
 static int32_t surface_pressure = 9800;
 static int32_t current_pressure = 0;
@@ -126,9 +127,16 @@ int main(void){
 			depth = ((current_pressure - surface_pressure)*10000)/((int32_t)(RHO_POOL*G_STAVANGER));
 			if(depth < 0) depth = 0;
 			uint16_t pressure_temp = (uint16_t) MS5803_getTemperature();
-			int_temp = ADC_getInternalTemperature();
-			CAN_transmitDepthTemp((int16_t)depth, int_temp, 0, pressure_temp);
+			CAN_transmitDepthTemp((int16_t)depth, pressure_temp);
 			flag_systick_update_depth = 0;
+		}
+
+		if(flag_systick_update_temp){
+			DCDC_temp = ADC_getTemperature(TEMP_DCDC);
+			int_temp = ADC_getTemperature(TEMP_INT);
+			manip_temp = ADC_getTemperature(TEMP_MANIP);
+			CAN_transmitTemp(int_temp, manip_temp, DCDC_temp);
+			flag_systick_update_temp = 0;
 		}
 
 		/* Transmit duty cycle to thrusters. */

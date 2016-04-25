@@ -108,17 +108,29 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
  * @param  Pitch, roll, yaw, heading in 0.1 degrees.
  * @retval None
  */
- extern void CAN_transmitDepthTemp(int16_t depth, uint16_t int_temp, uint16_t manip_temp, uint16_t pressure_temp){
- 	dataBuffer[0] = (uint8_t)(depth >> 8u);
- 	dataBuffer[1] = (uint8_t)(depth & 0xFF);
- 	dataBuffer[2] = (uint8_t)(int_temp >> 8u);
- 	dataBuffer[3] = (uint8_t)(int_temp & 0xFF);
- 	dataBuffer[4] = (uint8_t)(manip_temp >> 8u);
- 	dataBuffer[5] = (uint8_t)(manip_temp & 0xFF);
- 	dataBuffer[6] = (uint8_t)(pressure_temp >> 8u);
- 	dataBuffer[7] = (uint8_t)(pressure_temp & 0xFF);
+extern void CAN_transmitDepthTemp(int16_t depth, uint16_t pressure_temp){
+	dataBuffer[0] = (uint8_t)(depth >> 8u);
+	dataBuffer[1] = (uint8_t)(depth & 0xFF);
+	dataBuffer[2] = (uint8_t)(pressure_temp >> 8u);
+	dataBuffer[3] = (uint8_t)(pressure_temp & 0xFF);
 
- 	CAN_transmitBuffer(SENSOR_DEPTH_TEMP, dataBuffer, 8, CAN_ID_STD);
+	CAN_transmitBuffer(SENSOR_DEPTH_TEMP, dataBuffer, 4, CAN_ID_STD);
+}
+
+/**
+ * @brief  Send internal temperature, manipulator temperature and DC/DC temperature to topside system.
+ * @param  int_temp, manip_temp, DCDC_temp in millicelsius.
+ * @retval None
+ */
+extern void CAN_transmitTemp(uint16_t int_temp, uint16_t manip_temp, uint16_t DCDC_temp){
+	dataBuffer[0] = (uint8_t)(int_temp >> 8u);
+	dataBuffer[1] = (uint8_t)(int_temp & 0xFF);
+	dataBuffer[2] = (uint8_t)(manip_temp >> 8u);
+	dataBuffer[3] = (uint8_t)(manip_temp & 0xFF);
+	dataBuffer[4] = (uint8_t)(DCDC_temp >> 8u);
+	dataBuffer[5] = (uint8_t)(DCDC_temp & 0xFF);
+
+	CAN_transmitBuffer(SENSOR_TEMP, dataBuffer, 6, CAN_ID_STD);
 }
 
 /**
@@ -362,9 +374,9 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index){
 	d3 = CAN_getByteFromMessage(filter_match_index, 3);
 
 	int32_t result = (int32_t)	(((uint32_t)d0 << 24)
-								|((uint32_t)d1 << 16)
-								|((uint16_t)d2 << 8)
-								| d3);
+			|((uint32_t)d1 << 16)
+			|((uint16_t)d2 << 8)
+			| d3);
 	return result/1000;
 }
 
@@ -392,30 +404,30 @@ extern void Interface_VESC_request_temp_volt(void){
  * @param	None
  * @retval 	None
  */
- extern void Interface_VESC_requestRPM(void){
- 	Interface_VESC_requestData(rpm_check_counter, CAN_PACKET_GET_RPM);
+extern void Interface_VESC_requestRPM(void){
+	Interface_VESC_requestData(rpm_check_counter, CAN_PACKET_GET_RPM);
 
- 	/* Increment counter. */
+	/* Increment counter. */
 	if(rpm_check_counter < NUMBER_OF_VESCS){
 		rpm_check_counter++;
 	} else {
 		rpm_check_counter = 1;
 	}
- }
+}
 
- /**
-  * @brief  Request current from VESC's incrementally
+/**
+ * @brief  Request current from VESC's incrementally
   			one at a time. This function should be called every
   			~10 milli second. Data is read by the topside system.
-  * @param	None
-  * @retval None
-  */
- extern void Interface_VESC_requestCurrent(void){
-	 Interface_VESC_requestData(current_check_counter, CAN_PACKET_GET_CURRENT);
+ * @param	None
+ * @retval None
+ */
+extern void Interface_VESC_requestCurrent(void){
+	Interface_VESC_requestData(current_check_counter, CAN_PACKET_GET_CURRENT);
 
-		if(current_check_counter < NUMBER_OF_VESCS){
-			current_check_counter++;
-		} else {
-			current_check_counter = 1;
-		}
- }
+	if(current_check_counter < NUMBER_OF_VESCS){
+		current_check_counter++;
+	} else {
+		current_check_counter = 1;
+	}
+}

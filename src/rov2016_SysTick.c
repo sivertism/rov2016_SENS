@@ -96,6 +96,7 @@ void SysTick_Handler(void){
 		flag_systick_update_attitude = 1;
 		flag_systick_transmit_thrust = 1;
 		flag_systick_update_depth = 1;
+		flag_systick_update_temp = 1;
 		
 		/* Check for USART messages, start if 'k' */
 		if (USART_getNewBytes()>0){
