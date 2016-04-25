@@ -142,7 +142,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 
 	uint32_t id = (uint32_t)(CAN_PACKET_SET_DUTY << 8) | esc_id;
 
-	int32_t temp_duty = (int32_t)((duty * 100000.0f)/5);
+	int32_t temp_duty = (int32_t)((duty * 100000.0f)/6);
 
 	uint8_t buffer[4];
 	buffer[0] = temp_duty >> 24;	// MSB(Most significant byte).
