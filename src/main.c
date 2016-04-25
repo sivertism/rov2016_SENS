@@ -5,6 +5,7 @@
 #include "rov2016_Interface.h"
 #include "rov2016_Accelerometer.h"
 #include "rov2016_SPI.h"
+#include "main.h"
 #include <math.h>
 #include <stdint.h>
 
@@ -22,8 +23,6 @@ static int16_t ax=0, ay=0, az=0;
 static int32_t surface_pressure = 9800;
 static int32_t current_pressure = 0;
 
-/* Funtion Prototypes --------------------------------------------------------*/
-void init(void);
 
 /* Funtion Definitions -------------------------------------------------------*/
 int main(void){
@@ -124,7 +123,7 @@ int main(void){
 		if (flag_systick_update_depth){
 			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
 			current_pressure = MS5803_getPressure();
-			depth = ((current_pressure - surface_pressure)*9823)/(10*1000);
+			depth = ((current_pressure - surface_pressure)*10000)/((int32_t)(RHO_POOL*G_STAVANGER));
 			if(depth < 0) depth = 0;
 			uint16_t pressure_temp = (uint16_t) MS5803_getTemperature();
 			int_temp = ADC_getInternalTemperature();
