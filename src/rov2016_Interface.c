@@ -104,8 +104,8 @@ extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t 
 }
 
 /**
- * @brief  Send pitch, roll, yaw and heading to topside system.
- * @param  Pitch, roll, yaw, heading in 0.1 degrees.
+ * @brief  Send depth and temperature at pressure sensor to topside system.
+ * @param  depth in mm and temp in 0.01 celsius.
  * @retval None
  */
 extern void CAN_transmitDepthTemp(int32_t depth, uint16_t pressure_temp){
