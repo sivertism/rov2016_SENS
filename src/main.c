@@ -138,8 +138,8 @@ int main(void){
 			int_temp = ADC_getTemperature(TEMP_INT);
 			manip_temp = ADC_getTemperature(TEMP_MANIP);
 
-//			printf("DCDC temp: %d", DCDC_temp);
-//			printf("Internal temp: %d", int_temp);
+			printf("DCDC temp: %d", DCDC_temp);
+			printf("Internal temp: %d", int_temp);
 //			printf("Manipulator temp: %d", manip_temp);
 
 			CAN_transmitTemp(int_temp, manip_temp, DCDC_temp);
