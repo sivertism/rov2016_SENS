@@ -23,7 +23,7 @@ static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
 static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
 
-static int32_t surface_pressure = 9800;
+static int32_t surface_pressure = 9985;
 static int32_t current_pressure = 0;
 
 
@@ -93,7 +93,13 @@ int main(void){
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
 
-
+			/* Send magnetometer, gyroscope and accelerometer data over CAN */
+			uint8_t acc_array[6] = {(uint8_t)(ax >> 8), (uint8_t)(ax & 0xFF),
+									(uint8_t)(ay >> 8), (uint8_t)(ay & 0xFF),
+									(uint8_t)(az >> 8), (uint8_t)(az & 0xFF)};
+			CAN_transmitAcceleration(acc_array);
+			CAN_transmitMag(mx, my, mz);
+			CAN_transmitGyro(gz, gy, gz);
 
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
