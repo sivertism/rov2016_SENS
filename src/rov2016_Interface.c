@@ -152,7 +152,7 @@ extern void CAN_transmitMag(uint16_t mx, uint16_t my, uint16_t mz){
 }
 
 /**
- * @brief  Send tree axis gyroscope sensor data
+ * @brief  Send tree axis gyroscope sensor data.
  * @param  gx, gy, gz in degrees/sec.
  * @retval None
  */
@@ -365,6 +365,17 @@ extern void Interface_transmitManualThrust(void){
 	VESC_setDutyCycle(6, th6);
 	VESC_setDutyCycle(7, th7);
 	VESC_setDutyCycle(8, th8);
+
+	/*** Send duty cycle to Matlab ***/
+	int8_t duty_array[8] = {(int8_t)(th1*100.0f),
+							(int8_t)(th2*100.0f),
+							(int8_t)(th3*100.0f),
+							(int8_t)(th4*100.0f),
+							(int8_t)(th5*100.0f),
+							(int8_t)(th6*100.0f),
+							(int8_t)(th7*100.0f),
+							(int8_t)(th8*100.0f)};
+	CAN_transmitBuffer(SENSOR_THRUSTER_DUTY, duty_array, 8, 0);
 }
 
 /**
