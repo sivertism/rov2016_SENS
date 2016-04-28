@@ -86,18 +86,6 @@ int main(void){
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
 
-			//***********
-//			CAN_transmitQuaternions(mx_raw, my_raw, mz_raw, 0); // sender rå magnetometerverdier
-//
-//			uint8_t acc_array[6] = {(uint8_t)(ax >> 8),
-//									(uint8_t)(ax & 0xFF),
-//									(uint8_t)(ay >> 8),
-//									(uint8_t)(ay & 0xFF),
-//									(uint8_t)(az >> 8),
-//									(uint8_t)(az & 0xFF)};
-//
-//			CAN_transmitAcceleration(acc_array);
-			//***********
 
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
@@ -137,10 +125,6 @@ int main(void){
 			DCDC_temp = ADC_getTemperature(TEMP_DCDC);
 			int_temp = ADC_getTemperature(TEMP_INT);
 			manip_temp = ADC_getTemperature(TEMP_MANIP);
-
-			printf("DCDC temp: %d", DCDC_temp);
-			printf("Internal temp: %d", int_temp);
-//			printf("Manipulator temp: %d", manip_temp);
 
 			CAN_transmitTemp(int_temp, manip_temp, DCDC_temp);
 			flag_systick_update_temp = 0;

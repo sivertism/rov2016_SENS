@@ -136,6 +136,38 @@ extern void CAN_transmitTemp(uint16_t int_temp, uint16_t manip_temp, uint16_t DC
 }
 
 /**
+ * @brief  Send three axis magnetometer sensor data.
+ * @param  mx, my, mz in milligauss.
+ * @retval None
+ */
+extern void CAN_transmitMag(uint16_t mx, uint16_t my, uint16_t mz){
+	dataBuffer[0] = (uint8_t)(mx >> 8u);
+	dataBuffer[1] = (uint8_t)(mx & 0xFF);
+	dataBuffer[2] = (uint8_t)(my >> 8u);
+	dataBuffer[3] = (uint8_t)(my & 0xFF);
+	dataBuffer[4] = (uint8_t)(mz >> 8u);
+	dataBuffer[5] = (uint8_t)(mz & 0xFF);
+
+	CAN_transmitBuffer(SENSOR_MAGNETIC_FIELD, dataBuffer, 6, CAN_ID_STD);
+}
+
+/**
+ * @brief  Send tree axis gyroscope sensor data
+ * @param  gx, gy, gz in degrees/sec.
+ * @retval None
+ */
+extern void CAN_transmitGyro(uint16_t gx, uint16_t gy, uint16_t gz){
+	dataBuffer[0] = (uint8_t)(gx >> 8u);
+	dataBuffer[1] = (uint8_t)(gx & 0xFF);
+	dataBuffer[2] = (uint8_t)(gy >> 8u);
+	dataBuffer[3] = (uint8_t)(gy & 0xFF);
+	dataBuffer[4] = (uint8_t)(gz >> 8u);
+	dataBuffer[5] = (uint8_t)(gz & 0xFF);
+
+	CAN_transmitBuffer(SENSOR_ANGULAR_VELOCITY, dataBuffer, 6, CAN_ID_STD);
+}
+
+/**
  * @brief  	Sets the duty cycle of the specified VESC BLDC controller.
  * @param  	esc_id:	Can be a value of ESC_ID_x where x can be 1-12.
  * 			duty:	Duty cycle, can be a value between DUTY_CYCLE_MIN and
