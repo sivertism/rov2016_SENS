@@ -4,7 +4,9 @@
 #include "rov2016_canbus.h"
 #include "rov2016_Interface.h"
 #include "rov2016_Accelerometer.h"
+#include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
+#include "rov2016_ADC.h"
 #include "main.h"
 #include <math.h>
 #include <stdint.h>
@@ -15,11 +17,12 @@
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
 static int32_t mx=0.0f, my=0.0f, mz=0.0f;
-static int16_t mx_raw=0, my_raw=0, mz_raw=0;
+static int16_t ax=0, ay=0, az=0;
+static int16_t gx=0, gy=0, gz=0;
 static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
-static uint16_t int_temp = 0;
-static int16_t ax=0, ay=0, az=0;
+static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
+
 static int32_t surface_pressure = 9800;
 static int32_t current_pressure = 0;
 
@@ -53,11 +56,11 @@ int main(void){
 			flag_systick_zero_pressure = 0;
 		}
 
-		/* Calculate pitchand roll and transmit via CAN-bus */
+		/* Calculate attitude and transmit via CAN-bus */
 		if (flag_systick_update_attitude){
 			accelerometer_updateValue();
 			magnetometer_updateValue();
-			//gyroscope_updateValue();
+			gyroscope_updateValue();
 
 			ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 			ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
@@ -67,9 +70,9 @@ int main(void){
 			my = magnetometer_getData(MAGNETOMETER_Y_AXIS);
 			mz = magnetometer_getData(MAGNETOMETER_Z_AXIS);
 
-			mx_raw = magnetometer_getRawData(MAGNETOMETER_X_AXIS);
-			my_raw = magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
-			mz_raw = magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
+			gx = gyroscope_getRaw(GYROSCOPE_X_AXIS);
+			gy = gyroscope_getRaw(GYROSCOPE_Y_AXIS);
+			gz = gyroscope_getRaw(GYROSCOPE_Z_AXIS);
 
 			/* Sensor axes -> rov-axes.*/
 			int16_t temp = ax;
@@ -82,21 +85,15 @@ int main(void){
 			mz = -my;
 			my = temp2;
 
+			int16_t temp3 = gx;
+			gx = gz;
+			gy = -gy;
+			gz = -temp3;
+
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
 
-			//***********
-			CAN_transmitQuaternions(mx_raw, my_raw, mz_raw, 0); // sender rå magnetometerverdier
 
-			uint8_t acc_array[6] = {(uint8_t)(ax >> 8),
-									(uint8_t)(ax & 0xFF),
-									(uint8_t)(ay >> 8),
-									(uint8_t)(ay & 0xFF),
-									(uint8_t)(az >> 8),
-									(uint8_t)(az & 0xFF)};
-
-			CAN_transmitAcceleration(acc_array);
-			//***********
 
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
@@ -108,6 +105,7 @@ int main(void){
 		/* Calculate heading and transmit pitch, roll, heading to topside. */
 		if(flag_systick_update_heading){
 			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
+
 			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
 				(uint16_t)(heading/10));
 			flag_systick_update_heading = 0;
@@ -126,9 +124,18 @@ int main(void){
 			depth = ((current_pressure - surface_pressure)*10000)/((int32_t)(RHO_POOL*G_STAVANGER));
 			if(depth < 0) depth = 0;
 			uint16_t pressure_temp = (uint16_t) MS5803_getTemperature();
-			int_temp = ADC_getInternalTemperature();
-			CAN_transmitDepthTemp((int16_t)depth, int_temp, 0, pressure_temp);
+
+			CAN_transmitDepthTemp(depth, pressure_temp);
 			flag_systick_update_depth = 0;
+		}
+
+		if(flag_systick_update_temp){
+			DCDC_temp = ADC_getTemperature(TEMP_DCDC);
+			int_temp = ADC_getTemperature(TEMP_INT);
+			manip_temp = ADC_getTemperature(TEMP_MANIP);
+
+			CAN_transmitTemp(int_temp, manip_temp, DCDC_temp);
+			flag_systick_update_temp = 0;
 		}
 
 		/* Transmit duty cycle to thrusters. */

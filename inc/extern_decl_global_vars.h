@@ -11,6 +11,7 @@ volatile extern uint8_t flag_systick_update_depth;
 volatile extern uint8_t flag_systick_update_ms5803_temp;
 volatile extern uint8_t flag_systick_calibrate_gyro;
 volatile extern uint8_t flag_systick_zero_pressure;
+volatile extern uint8_t flag_systick_update_temp;
 
 /* Status LED's */
 extern const uint8_t MAIN_LOOP_LED;

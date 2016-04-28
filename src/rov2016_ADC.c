@@ -343,14 +343,16 @@ uint16_t ADC_getChannel(uint8_t channel){
 
 
 /**
- * @brief  	Returns the internal temperature of the pod, as measured by the on-board LM35
- * 			temperature sensor.
- * @param  	None
- * @retval 	The temperature in the pod in 1000LSb/Celsius.
+ * @brief  	Returns the temperature of the selected temperature sensor.
+ * @param	Choice of temperature sensor.
+ * @retval 	The temperature at the selected sensors location in 1000LSb/Celsius.
  */
-extern uint16_t ADC_getInternalTemperature(void){
+extern uint16_t ADC_getTemperature(uint8_t sensor_input){
 	/*Voltage in 100 uV per LSb*/
-	uint16_t temp = (3000*ADC_buffer[ADC_CHANNEL_INT_TEMP])/4096;
+	uint16_t temp = (3000*ADC_buffer[sensor_input])/4096;
 	/* The sensor outputs 10 mV per Celsius -> 10 uV per millicelsius.*/
 	return temp*10;
 }
+
+
+

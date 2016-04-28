@@ -39,7 +39,10 @@ extern void CAN_transmit_AN_RAW(void);
 extern void CAN_transmitAlive(void);
 extern void CAN_transmitAHRS(int16_t pitch, int16_t roll, int16_t yaw, uint16_t heading);
 extern int16_t* Interface_readController(void);
-extern void CAN_transmitDepthTemp(int16_t depth, uint16_t int_temp, uint16_t manip_temp, uint16_t pressure_temp);
+extern void CAN_transmitDepthTemp(int32_t depth, uint16_t pressure_temp);
+extern void CAN_transmitTemp(uint16_t int_temp, uint16_t manip_temp, uint16_t DCDC_temp);
+extern void CAN_transmitMag(uint16_t mx, uint16_t my, uint16_t mz);
+extern void CAN_transmitGyro(uint16_t gx, uint16_t gy, uint16_t gz);
 
 /* VESC interface */
 extern void VESC_setDutyCycle(uint8_t esc_id, float duty);
