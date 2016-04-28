@@ -4,6 +4,7 @@
 #include "rov2016_canbus.h"
 #include "rov2016_Interface.h"
 #include "rov2016_Accelerometer.h"
+#include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_ADC.h"
 #include "main.h"
@@ -16,11 +17,12 @@
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
 static int32_t mx=0.0f, my=0.0f, mz=0.0f;
-static int16_t mx_raw=0, my_raw=0, mz_raw=0;
+static int16_t ax=0, ay=0, az=0;
+static int16_t gx=0, gy=0, gz=0;
 static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
 static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
-static int16_t ax=0, ay=0, az=0;
+
 static int32_t surface_pressure = 9800;
 static int32_t current_pressure = 0;
 
@@ -54,11 +56,11 @@ int main(void){
 			flag_systick_zero_pressure = 0;
 		}
 
-		/* Calculate pitchand roll and transmit via CAN-bus */
+		/* Calculate attitude and transmit via CAN-bus */
 		if (flag_systick_update_attitude){
 			accelerometer_updateValue();
 			magnetometer_updateValue();
-			//gyroscope_updateValue();
+			gyroscope_updateValue();
 
 			ax = accelerometer_getRawData(ACCELEROMETER_X_AXIS);
 			ay = accelerometer_getRawData(ACCELEROMETER_Y_AXIS);
@@ -68,9 +70,9 @@ int main(void){
 			my = magnetometer_getData(MAGNETOMETER_Y_AXIS);
 			mz = magnetometer_getData(MAGNETOMETER_Z_AXIS);
 
-//			mx_raw = magnetometer_getRawData(MAGNETOMETER_X_AXIS);
-//			my_raw = magnetometer_getRawData(MAGNETOMETER_Y_AXIS);
-//			mz_raw = magnetometer_getRawData(MAGNETOMETER_Z_AXIS);
+			gx = gyroscope_getRaw(GYROSCOPE_X_AXIS);
+			gy = gyroscope_getRaw(GYROSCOPE_Y_AXIS);
+			gz = gyroscope_getRaw(GYROSCOPE_Z_AXIS);
 
 			/* Sensor axes -> rov-axes.*/
 			int16_t temp = ax;
@@ -83,8 +85,14 @@ int main(void){
 			mz = -my;
 			my = temp2;
 
+			int16_t temp3 = gx;
+			gx = gz;
+			gy = -gy;
+			gz = -temp3;
+
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
+
 
 
 			if(!flag_systick_update_heading){
