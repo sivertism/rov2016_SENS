@@ -2,6 +2,7 @@
 volatile extern uint8_t fmi_topside_xbox_ctrl;
 volatile extern uint8_t fmi_topside_xbox_axes;
 volatile extern uint8_t fmi_topside_sens_ctrl;
+volatile extern uint8_t fmi_topside_reg_param;
 
 /* Global software flags */
 volatile extern uint8_t flag_systick_update_attitude;

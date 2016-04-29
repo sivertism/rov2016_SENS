@@ -35,7 +35,7 @@ int main(void){
 	fmi_topside_xbox_ctrl = CAN_addRxFilter(TOP_XBOX_CTRLS);
 	fmi_topside_xbox_axes = CAN_addRxFilter(TOP_XBOX_AXES);
 	fmi_topside_sens_ctrl = CAN_addRxFilter(TOP_SENS_CTRL);
-
+	fmi_topside_reg_param = CAN_addRxFilter(TOP_REG_PARAM1);
 
 	GPIOE->ODR = 0x0; // Turn off LED's
 	/* Private vars ***********************************************************/
@@ -86,8 +86,8 @@ int main(void){
 			my = temp2;
 
 			int16_t temp3 = gx;
-			gx = gz;
-			gy = -gy;
+			gx = -gz;
+			gy = gy;
 			gz = -temp3;
 
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
@@ -99,7 +99,7 @@ int main(void){
 									(uint8_t)(az >> 8), (uint8_t)(az & 0xFF)};
 			CAN_transmitAcceleration(acc_array);
 			CAN_transmitMag(mx, my, mz);
-			CAN_transmitGyro(gz, gy, gz);
+			CAN_transmitGyro(gx, gy, gz);
 
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
@@ -147,7 +147,7 @@ int main(void){
 		/* Transmit duty cycle to thrusters. */
 		if (flag_systick_transmit_thrust){
 			int16_t* controller_vals = Interface_readController();
-			Interface_transmitManualThrust();
+			if(!CAN_getByteFromMessage(fmi_topside_reg_param, 6)) Interface_transmitManualThrust();
 			flag_systick_transmit_thrust = 0;
 		}
 	} // end while
