@@ -7,13 +7,25 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_ADC.h"
-#include "main.h"
 #include <math.h>
 #include <stdint.h>
 
 
 /* GLOBAL VARIABLES ----------------------------------------------------------*/
 #include "def_global_vars.h"
+
+/* Macro -------------------------------------------------------------------------------*/
+
+/* Water density */
+#define RHO_POOL										996
+#define RHO_SEA											1025
+
+/* Gravitational acceleration */
+#define G_STAVANGER										9.824f
+#define G_HOUSTON										9.792f
+
+
+void init(void);
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
 static int32_t mx=0.0f, my=0.0f, mz=0.0f;
