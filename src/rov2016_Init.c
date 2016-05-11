@@ -34,4 +34,5 @@ extern void init(void){
 	MS5803_Init();
 	MS5803_updateDigital(MS5803_CONVERT_TEMPERATURE);
 	SysTick_init();
+	gyroscope_bias_compensation();
 }

@@ -2,6 +2,7 @@
 volatile uint8_t fmi_topside_xbox_ctrl = 0;
 volatile uint8_t fmi_topside_xbox_axes = 0;
 volatile uint8_t fmi_topside_sens_ctrl = 0;
+volatile uint8_t fmi_topside_reg_param = 0;
 
 /* Global software flags */
 volatile uint8_t flag_systick_update_heading = 0;
@@ -11,8 +12,7 @@ volatile uint8_t flag_systick_update_depth = 0;
 volatile uint8_t flag_systick_update_ms5803_temp = 0;
 volatile uint8_t flag_systick_calibrate_gyro = 0;
 volatile uint8_t flag_systick_update_temp = 0;
-/* Reset depth at powerup.*/
-volatile uint8_t flag_systick_zero_pressure = 1;
+volatile uint8_t flag_systick_zero_pressure = 0;
 
 
 /* Choice of axis in accelerometer_data */

@@ -7,13 +7,25 @@
 #include "rov2016_Gyroscope.h"
 #include "rov2016_SPI.h"
 #include "rov2016_ADC.h"
-#include "main.h"
 #include <math.h>
 #include <stdint.h>
 
 
 /* GLOBAL VARIABLES ----------------------------------------------------------*/
 #include "def_global_vars.h"
+
+/* Macro -------------------------------------------------------------------------------*/
+
+/* Water density */
+#define RHO_POOL										996
+#define RHO_SEA											1025
+
+/* Gravitational acceleration */
+#define G_STAVANGER										9.824f
+#define G_HOUSTON										9.792f
+
+
+void init(void);
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
 static int32_t mx=0.0f, my=0.0f, mz=0.0f;
@@ -23,7 +35,7 @@ static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
 static int32_t depth = 0;
 static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
 
-static int32_t surface_pressure = 9800;
+static int32_t surface_pressure = 9985;
 static int32_t current_pressure = 0;
 
 
@@ -35,7 +47,7 @@ int main(void){
 	fmi_topside_xbox_ctrl = CAN_addRxFilter(TOP_XBOX_CTRLS);
 	fmi_topside_xbox_axes = CAN_addRxFilter(TOP_XBOX_AXES);
 	fmi_topside_sens_ctrl = CAN_addRxFilter(TOP_SENS_CTRL);
-
+	fmi_topside_reg_param = CAN_addRxFilter(TOP_REG_PARAM1);
 
 	GPIOE->ODR = 0x0; // Turn off LED's
 	/* Private vars ***********************************************************/
@@ -86,14 +98,20 @@ int main(void){
 			my = temp2;
 
 			int16_t temp3 = gx;
-			gx = gz;
-			gy = -gy;
+			gx = -gz;
+			gy = gy;
 			gz = -temp3;
 
 			pitch = AHRS_accelerometer_pitch(ax, ay, az);
 			roll = AHRS_accelerometer_roll(ay, az);
 
-
+			/* Send magnetometer, gyroscope and accelerometer data over CAN */
+			uint8_t acc_array[6] = {(uint8_t)(ax >> 8), (uint8_t)(ax & 0xFF),
+									(uint8_t)(ay >> 8), (uint8_t)(ay & 0xFF),
+									(uint8_t)(az >> 8), (uint8_t)(az & 0xFF)};
+			CAN_transmitAcceleration(acc_array);
+			CAN_transmitMag(mx, my, mz);
+			CAN_transmitGyro(gx, gy, gz);
 
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
@@ -141,7 +159,7 @@ int main(void){
 		/* Transmit duty cycle to thrusters. */
 		if (flag_systick_transmit_thrust){
 			int16_t* controller_vals = Interface_readController();
-			Interface_transmitManualThrust();
+			if(!CAN_getByteFromMessage(fmi_topside_reg_param, 6)) Interface_transmitManualThrust();
 			flag_systick_transmit_thrust = 0;
 		}
 	} // end while
