@@ -3,6 +3,7 @@ volatile extern uint8_t fmi_topside_xbox_ctrl;
 volatile extern uint8_t fmi_topside_xbox_axes;
 volatile extern uint8_t fmi_topside_sens_ctrl;
 volatile extern uint8_t fmi_topside_reg_param;
+volatile extern uint8_t fmi_auto_thrust;
 
 /* Global software flags */
 volatile extern uint8_t flag_systick_update_attitude;
@@ -13,6 +14,7 @@ volatile extern uint8_t flag_systick_update_ms5803_temp;
 volatile extern uint8_t flag_systick_calibrate_gyro;
 volatile extern uint8_t flag_systick_zero_pressure;
 volatile extern uint8_t flag_systick_update_temp;
+volatile extern uint8_t flag_systick_auto;
 
 /* Status LED's */
 extern const uint8_t MAIN_LOOP_LED;

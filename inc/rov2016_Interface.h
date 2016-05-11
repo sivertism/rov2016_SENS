@@ -43,6 +43,8 @@ extern void CAN_transmitDepthTemp(int32_t depth, uint16_t pressure_temp);
 extern void CAN_transmitTemp(uint16_t int_temp, uint16_t manip_temp, uint16_t DCDC_temp);
 extern void CAN_transmitMag(uint16_t mx, uint16_t my, uint16_t mz);
 extern void CAN_transmitGyro(uint16_t gx, uint16_t gy, uint16_t gz);
+extern void Interface_transmitThrustToMatlab(void);
+
 
 /* VESC interface */
 extern void VESC_setDutyCycle(uint8_t esc_id, float duty);
@@ -53,3 +55,6 @@ extern int32_t Interface_VESC_getInt32(uint8_t filter_match_index);
 extern void Interface_VESC_request_temp_volt(void);
 extern void Interface_VESC_requestRPM(void);
 extern void Interface_VESC_requestCurrent(void);
+
+/* Misc. */
+extern int16_t Interface_getTotalDuty(void);

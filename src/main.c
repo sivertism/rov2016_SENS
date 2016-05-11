@@ -28,10 +28,10 @@
 void init(void);
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
-static int32_t mx=0.0f, my=0.0f, mz=0.0f;
+static int32_t mx=0, my=0, mz=0;
 static int16_t ax=0, ay=0, az=0;
 static int16_t gx=0, gy=0, gz=0;
-static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
+static int32_t heading = 0, pitch=0, roll=0;
 static int32_t depth = 0;
 static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
 
@@ -157,9 +157,10 @@ int main(void){
 		}
 
 		/* Transmit duty cycle to thrusters. */
-		if (flag_systick_transmit_thrust){
+		if (flag_systick_transmit_thrust && flag_systick_auto){
 			int16_t* controller_vals = Interface_readController();
-			if(!CAN_getByteFromMessage(fmi_topside_reg_param, 6)) Interface_transmitManualThrust();
+			Interface_transmitManualThrust();
+			Interface_transmitThrustToMatlab();
 			flag_systick_transmit_thrust = 0;
 		}
 	} // end while

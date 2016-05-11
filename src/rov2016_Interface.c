@@ -17,6 +17,7 @@
 #include "stm32f30x_gpio.h"
 #include "stm32f30x_misc.h"
 #include <stdlib.h>
+#include <math.h>
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
 int16_t controller_data[7] = {0};
@@ -27,6 +28,7 @@ static uint8_t counter_alive = 0;
 static uint8_t temperature_check_counter = 1;
 static uint8_t rpm_check_counter = 1;
 static uint8_t current_check_counter = 1;
+static float th1=0.0f, th2=0.0f, th3=0.0f, th4=0.0f, th5=0.0f, th6=0.0f, th7=0.0f, th8=0.0f;
 
 /* Function definitions ----------------------------------------------------------------*/
 
@@ -268,8 +270,6 @@ extern int16_t* Interface_readController(void){
  * @retval 	int16_t array containing controller data.
  */
 extern void Interface_transmitManualThrust(void){
-	float th1=0.0f, th2=0.0f, th3=0.0f, th4=0.0f, th5=0.0f, th6=0.0f, th7=0.0f, th8=0.0f;
-
 
 	/* Thruster 1-4 (up-/downwards thrust) **********************************************************/
 	float downthrust = (float)controller_data[0]/2000.0f;
@@ -365,16 +365,23 @@ extern void Interface_transmitManualThrust(void){
 	VESC_setDutyCycle(6, th6);
 	VESC_setDutyCycle(7, th7);
 	VESC_setDutyCycle(8, th8);
+}
 
+/**
+ * @brief  	Sends thruster duty cycle on the CAN-bus.
+ * @param 	None
+ * @retval 	None
+ */
+extern void Interface_transmitThrustToMatlab(void){
 	/*** Send duty cycle to Matlab ***/
-	int8_t duty_array[8] = {(int8_t)(th1*100.0f),
-							(int8_t)(th2*100.0f),
-							(int8_t)(th3*100.0f),
-							(int8_t)(th4*100.0f),
-							(int8_t)(th5*100.0f),
-							(int8_t)(th6*100.0f),
-							(int8_t)(th7*100.0f),
-							(int8_t)(th8*100.0f)};
+	int8_t duty_array[8] = {(int8_t)(th1*33.3f),
+							(int8_t)(th2*33.3f),
+							(int8_t)(th3*33.3f),
+							(int8_t)(th4*33.3f),
+							(int8_t)(th5*33.3f),
+							(int8_t)(th6*33.3f),
+							(int8_t)(th7*33.3f),
+							(int8_t)(th8*33.3f)};
 	CAN_transmitBuffer(SENSOR_THRUSTER_DUTY, duty_array, 8, 0);
 }
 
@@ -475,4 +482,35 @@ extern void Interface_VESC_requestCurrent(void){
 	} else {
 		current_check_counter = 1;
 	}
+}
+
+/**
+ * @brief  	Retrieve a number proportional to the total amount of thrust.
+ * @param	None
+ * @retval 	int16_t proportional to the total amount of thrust, varies
+ * 			between -100 and 100.
+ */
+extern int16_t Interface_getTotalDuty(void){
+	if(flag_systick_auto){
+		uint8_t* thrust = CAN_getMessagePointer(fmi_auto_thrust);
+		uint16_t abs_thrust = (int16_t)(0.5*sqrtf(	(float)thrust[0]*thrust[0] +
+													(float)thrust[1]*thrust[1] +
+													(float)thrust[2]*thrust[2] +
+													(float)thrust[3]*thrust[3] +
+													(float)thrust[4]*thrust[4] +
+													(float)thrust[5]*thrust[5] +
+													(float)thrust[6]*thrust[6] +
+													(float)thrust[7]*thrust[7]));
+	} else {
+		uint16_t abs_thrust = (int16_t)(0.015*sqrtf(3000.0*th1*th1 +
+													3000.0*th2*th2 +
+													3000.0*th3*th3 +
+													3000.0*th4*th4 +
+													3000.0*th5*th5 +
+													3000.0*th6*th6 +
+													3000.0*th7*th7 +
+													3000.0*th8*th8));
+
+	}
+	return abs_thrust;
 }
