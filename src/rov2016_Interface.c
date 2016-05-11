@@ -491,9 +491,10 @@ extern void Interface_VESC_requestCurrent(void){
  * 			between -100 and 100.
  */
 extern int16_t Interface_getTotalDuty(void){
+	uint16_t abs_thrust = 0;
 	if(flag_systick_auto){
 		uint8_t* thrust = CAN_getMessagePointer(fmi_auto_thrust);
-		uint16_t abs_thrust = (int16_t)(0.5*sqrtf(	(float)thrust[0]*thrust[0] +
+		abs_thrust = (int16_t)(0.5*sqrtf(	(float)thrust[0]*thrust[0] +
 													(float)thrust[1]*thrust[1] +
 													(float)thrust[2]*thrust[2] +
 													(float)thrust[3]*thrust[3] +
@@ -502,15 +503,14 @@ extern int16_t Interface_getTotalDuty(void){
 													(float)thrust[6]*thrust[6] +
 													(float)thrust[7]*thrust[7]));
 	} else {
-		uint16_t abs_thrust = (int16_t)(0.015*sqrtf(3000.0*th1*th1 +
-													3000.0*th2*th2 +
-													3000.0*th3*th3 +
-													3000.0*th4*th4 +
-													3000.0*th5*th5 +
-													3000.0*th6*th6 +
-													3000.0*th7*th7 +
-													3000.0*th8*th8));
-
+		abs_thrust = (int16_t)(0.5*sqrtf(3333.0*th1*th1 +
+													3333.0*th2*th2 +
+													3333.0*th3*th3 +
+													3333.0*th4*th4 +
+													3333.0*th5*th5 +
+													3333.0*th6*th6 +
+													3333.0*th7*th7 +
+													3333.0*th8*th8));
 	}
 	return abs_thrust;
 }

@@ -151,7 +151,6 @@ int main(void){
 			DCDC_temp = ADC_getTemperature(TEMP_DCDC);
 			int_temp = ADC_getTemperature(TEMP_INT);
 			manip_temp = ADC_getTemperature(TEMP_MANIP);
-
 			CAN_transmitTemp(int_temp, manip_temp, DCDC_temp);
 			flag_systick_update_temp = 0;
 		}
