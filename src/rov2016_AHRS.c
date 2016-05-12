@@ -14,6 +14,7 @@
 #include "stm32f30x.h"
 #include <math.h>
 #include <stdint.h>
+#include "rov2016_uart.h"
 
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
@@ -23,9 +24,9 @@
 
 /* Private variables -------------------------------------------------------------------*/
 /* Sensor fusion*/
-int32_t acc_pitch_k_1=0, acc_roll_k_1=0, acc_pitch_k=0, acc_roll_k=0;
-int32_t delta_roll_acc=0, delta_pitch_acc=0;
-int32_t delta_pitch_k=0, delta_roll_k=0;
+float acc_pitch_k_1=0.0f, acc_roll_k_1=0.0f, acc_pitch_k=0.0f, acc_roll_k=0.0f;
+float delta_roll_acc=0.0f, delta_pitch_acc=0.0f;
+float delta_pitch_k=0.0f, delta_roll_k=0.0f;
 int32_t pitch_roll_buff[2] = {0};
 
 float weight_acc=0.0f; weight_acc_pitch=0.0f; weight_acc_roll=0.0f;
@@ -234,8 +235,8 @@ extern int32_t AHRS_tilt_compensated_heading(int32_t pitch, int32_t roll, int32_
 extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz){
 	/* Accelerometer pitch, roll *******************************************************/
 	/* Calculate pitch, roll */
-	acc_pitch_k = AHRS_accelerometer_pitch(ax, ay, az);
-	acc_roll_k = AHRS_accelerometer_roll(ay, az);
+	acc_pitch_k = ((float)AHRS_accelerometer_pitch(ax, ay, az))/100;
+	acc_roll_k = ((float)AHRS_accelerometer_roll(ay, az))/100;
 
 	/* Calculate accelerometers delta_pitch, delta_roll */
 	delta_pitch_k = acc_pitch_k - acc_pitch_k_1;
@@ -247,36 +248,36 @@ extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t 
 	/* Thruster compensation*/
 	float tot_thrust = (float)Interface_getTotalDuty()*0.01f;
 	if(tot_thrust < 0.25f){
-		weight_acc = 1 - 3.0*tot_thrust;
+		weight_acc = 1.0f - 3.0f*tot_thrust;
 	} else {
-		weight_acc = 1 - 0.75;
+		weight_acc = 1.0f - 0.75f;
 	}
 
 	/* lowpass */
-	if(delta_pitch_k > 100){
-		weight_acc_pitch = weight_acc/((float)delta_pitch_k*0.01f);
-	} else if (delta_pitch_k < -100) {
-		weight_acc_pitch = - weight_acc/((float)delta_pitch_k*0.01f);
+	if(delta_pitch_k > 1.0f){
+		weight_acc_pitch = weight_acc/delta_pitch_k;
+	} else if (delta_pitch_k < -1.0f) {
+		weight_acc_pitch = - weight_acc/delta_pitch_k;
 	} else{
 		weight_acc_pitch = weight_acc;
 	}
 
-	if(delta_roll_k > 100){
-		weight_acc_roll = weight_acc/((float)delta_roll_k*0.01f);
-	} else if (delta_roll_k < -100) {
-		weight_acc_roll = - weight_acc/((float)delta_roll_k*0.01f);
+	if(delta_roll_k > 1.0f){
+		weight_acc_roll = weight_acc/delta_roll_k;
+	} else if (delta_roll_k < -1.0f) {
+		weight_acc_roll = - weight_acc/delta_roll_k;
 	} else{
 		weight_acc_roll = weight_acc;
 	}
 
-	delta_pitch_acc = (float)acc_pitch_k - est_pitch_k_1;
-	delta_roll_acc = (float)acc_roll_k - est_roll_k_1;
+	delta_pitch_acc = acc_pitch_k - est_pitch_k_1;
+	delta_roll_acc = acc_roll_k - est_roll_k_1;
 
 	/* Gyroscope estimates *************************************************************/
 	/* Digital -> dps */
-	gx_k = gx*0.00875f;
-	gy_k = gy*0.00875f;
-	gz_k = gz*0.00875f;
+	gx_k = ((float)gx)*0.00875f;
+	gy_k = ((float)gy)*0.00875f;
+	gz_k = ((float)gz)*0.00875f;
 
 	/* Calc delta pitch,roll */
 	delta_pitch_gyro = timestep * gy_k;
@@ -299,11 +300,11 @@ extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t 
 	if(weight_gyro_roll > 1.0f) weight_gyro_roll = 1.0f;
 
 	/* Sensor fusion *******************************************************************/
-	est_delta_pitch = 0.01f*delta_pitch_acc * weight_acc_pitch;
+	est_delta_pitch = delta_pitch_acc * weight_acc_pitch;
 	est_delta_pitch += delta_pitch_gyro * weight_gyro_pitch;
 	est_delta_pitch /= (weight_acc_pitch + weight_gyro_pitch);
 
-	est_delta_roll = 0.01f*delta_roll_acc * weight_acc_roll;
+	est_delta_roll = delta_roll_acc * weight_acc_roll;
 	est_delta_roll += delta_roll_gyro * weight_gyro_roll;
 	est_delta_roll /= (weight_acc_roll + weight_gyro_roll);
 

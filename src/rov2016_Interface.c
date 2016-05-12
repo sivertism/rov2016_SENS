@@ -202,7 +202,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 }
 
 /**
- * @brief  	Calculates tilt compensated heading.
+ * @brief  	Reads XBOX-controller data from topside CAN-bus message.
  * 			Button/axes mapping:
  * 				0. Left trigger:			Depth -
  * 				1. Right trigger:			Depth +
@@ -270,6 +270,14 @@ extern int16_t* Interface_readController(void){
  * @retval 	int16_t array containing controller data.
  */
 extern void Interface_transmitManualThrust(void){
+	th1=0.0f;
+	th2=0.0f;
+	th3=0.0f;
+	th4=0.0f;
+	th5=0.0f;
+	th6=0.0f;
+	th7=0.0f;
+	th8=0.0f;
 
 	/* Thruster 1-4 (up-/downwards thrust) **********************************************************/
 	float downthrust = (float)controller_data[0]/2000.0f;
@@ -494,23 +502,39 @@ extern int16_t Interface_getTotalDuty(void){
 	uint16_t abs_thrust = 0;
 	if(flag_systick_auto){
 		uint8_t* thrust = CAN_getMessagePointer(fmi_auto_thrust);
-		abs_thrust = (int16_t)(0.5*sqrtf(	(float)thrust[0]*thrust[0] +
-													(float)thrust[1]*thrust[1] +
-													(float)thrust[2]*thrust[2] +
-													(float)thrust[3]*thrust[3] +
-													(float)thrust[4]*thrust[4] +
-													(float)thrust[5]*thrust[5] +
-													(float)thrust[6]*thrust[6] +
-													(float)thrust[7]*thrust[7]));
+		abs_thrust = abs(thrust[0]) + abs(thrust[1]) + abs(thrust[2]) + abs(thrust[3]) +
+				abs(thrust[4]) + abs(thrust[5]) + abs(thrust[6]) + abs(thrust[7]);
+		abs_thrust = abs_thrust/8;
+//		abs_thrust = (int16_t)(0.5*sqrtf(	(float)thrust[0]*thrust[0] +
+//													(float)thrust[1]*thrust[1] +
+//													(float)thrust[2]*thrust[2] +
+//													(float)thrust[3]*thrust[3] +
+//													(float)thrust[4]*thrust[4] +
+//													(float)thrust[5]*thrust[5] +
+//													(float)thrust[6]*thrust[6] +
+//													(float)thrust[7]*thrust[7]));
 	} else {
-		abs_thrust = (int16_t)(0.5*sqrtf(3333.0*th1*th1 +
-													3333.0*th2*th2 +
-													3333.0*th3*th3 +
-													3333.0*th4*th4 +
-													3333.0*th5*th5 +
-													3333.0*th6*th6 +
-													3333.0*th7*th7 +
-													3333.0*th8*th8));
+		abs_thrust = (uint16_t)(300.0*(fabsf(th1) + fabsf(th2) + fabsf(th3) + fabsf(th4) +
+				fabsf(th5) + fabsf(th6) + fabsf(th7) + fabsf(th8)));
+		abs_thrust = abs_thrust/8;
+		printf("%d, %d, %d, %d, %d, %d, %d, %d, %d",
+				abs_thrust,
+				(int16_t)(th1*100.0f),
+				(int16_t)(th2*100.0f),
+				(int16_t)(th3*100.0f),
+				(int16_t)(th4*100.0f),
+				(int16_t)(th5*100.0f),
+				(int16_t)(th6*100.0f),
+				(int16_t)(th7*100.0f),
+				(int16_t)(th8*100.0f));
+//		abs_thrust = (int16_t)(0.5*sqrtf(3333.0*th1*th1 +
+//													3333.0*th2*th2 +
+//													3333.0*th3*th3 +
+//													3333.0*th4*th4 +
+//													3333.0*th5*th5 +
+//													3333.0*th6*th6 +
+//													3333.0*th7*th7 +
+//													3333.0*th8*th8));
 	}
 	return abs_thrust;
 }

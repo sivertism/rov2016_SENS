@@ -57,9 +57,8 @@ extern void SysTick_init(void) {
 } // end Systick_init()
 
 /**
- * @brief ****************************************************************
- * ***********************************************************************
- * ***********************************************************************
+ * @brief Systick handler functions as a state machine, setting flags at
+ * fixed intervals and at certain received CAN-messages.
  * @param  None
  * @retval None
  */
