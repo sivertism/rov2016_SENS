@@ -29,7 +29,8 @@ static uint8_t temperature_check_counter = 1;
 static uint8_t rpm_check_counter = 1;
 static uint8_t current_check_counter = 1;
 static float th1=0.0f, th2=0.0f, th3=0.0f, th4=0.0f, th5=0.0f, th6=0.0f, th7=0.0f, th8=0.0f;
-
+static float th1_safe=1.0f, th2_safe=0.0f, th3_safe=0.0f, th4_safe=0.0f;
+static float th5_safe=0.0f, th6_safe=0.0f, th7_safe=0.0f, th8_safe=0.0f;
 /* Function definitions ----------------------------------------------------------------*/
 
 /**
@@ -182,7 +183,6 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 	 * legg float inn i 4 byte array
 	 * send med metoden can_transmitbuffer.
 	 */
-
 	/* Check parameters. */
 	if (duty < VESC_DUTY_CYCLE_MIN) duty = VESC_DUTY_CYCLE_MIN;
 	if (duty > VESC_DUTY_CYCLE_MAX) duty = VESC_DUTY_CYCLE_MAX;
@@ -190,7 +190,7 @@ extern void VESC_setDutyCycle(uint8_t esc_id, float duty){
 
 	uint32_t id = (uint32_t)(CAN_PACKET_SET_DUTY << 8) | esc_id;
 
-	int32_t temp_duty = (int32_t)((duty * 100000.0f)/3);
+	int32_t temp_duty = (int32_t)((duty * 100000.0f));
 
 	uint8_t buffer[4];
 	buffer[0] = temp_duty >> 24;	// MSB(Most significant byte).
@@ -323,45 +323,50 @@ extern void Interface_transmitManualThrust(void){
 	th7 += yawthrust;
 	th8 += yawthrust;
 
-	/* Normalize if multiple axes active. **********************************************************/
+	/* Limit thrust */
+	if(th1>1.0f) th1 = 1.0f;
+	if(th1<-1.0f) th1 = -1.0f;
 
-	/* Search for largest thrust value. */
-	float maxthrust_up_down = 0.95f;
-	float maxthrust_sideways = 0.95f;
+	if(th2>1.0f) th2 = 1.0f;
+	if(th2<-1.0f) th2 = -1.0f;
 
-	if(maxthrust_up_down > abs(th1)) maxthrust_up_down = abs(th1);
-	if(maxthrust_up_down > abs(th2)) maxthrust_up_down = abs(th2);
-	if(maxthrust_up_down > abs(th3)) maxthrust_up_down = abs(th3);
-	if(maxthrust_up_down > abs(th4)) maxthrust_up_down = abs(th4);
+	if(th3>1.0f) th3 = 1.0f;
+	if(th3<-1.0f) th3 = -1.0f;
 
-	if(maxthrust_sideways > abs(th5)) maxthrust_sideways = abs(th5);
-	if(maxthrust_sideways > abs(th6)) maxthrust_sideways = abs(th6);
-	if(maxthrust_sideways > abs(th7)) maxthrust_sideways = abs(th7);
-	if(maxthrust_sideways > abs(th8)) maxthrust_sideways = abs(th8);
+	if(th4>1.0f) th4 = 1.0f;
+	if(th4<-1.0f) th4 = -1.0f;
 
-	if(maxthrust_up_down > 1.0f){
-		th1 = th1/(maxthrust_up_down*1.06f);
-		th2 = th2/(maxthrust_up_down*1.06f);
-		th3 = th3/(maxthrust_up_down*1.06f);
-		th4 = th4/(maxthrust_up_down*1.06f);
-	} else if (maxthrust_up_down > 0.95f){
-		th1 /= 1.06f;
-		th2 /= 1.06f;
-		th3 /= 1.06f;
-		th4 /= 1.06f;
-	}
+	if(th5>1.0f) th5 = 1.0f;
+	if(th5<-1.0f) th5 = -1.0f;
 
-	if(maxthrust_sideways > 1.0f){
-		th5 = th5/(maxthrust_sideways*1.06);
-		th6 = th6/(maxthrust_sideways*1.06);
-		th7 = th7/(maxthrust_sideways*1.06);
-		th8 = th8/(maxthrust_sideways*1.06);
-	} else if (maxthrust_sideways > 0.95f){
-		th5 /= 1.06f;
-		th6 /= 1.06f;
-		th7 /= 1.06f;
-		th8 /= 1.06f;
-	}
+	if(th6>1.0f) th6 = 1.0f;
+	if(th6<-1.0f) th6 = -1.0f;
+
+	if(th7>1.0f) th7 = 1.0f;
+	if(th7<-1.0f) th7 = -1.0f;
+
+	if(th8>1.0f) th8 = 1.0f;
+	if(th8<-1.0f) th8 = -1.0f;
+
+	/* Scale down thrust. */
+	th1 = th1 * 0.33f; // 1/3
+	th2 = th2 * 0.33f; // 1/3
+	th3 = th3 * 0.33f; // 1/3
+	th4 = th4 * 0.33f; // 1/3
+	th5 = th5 * 0.33f; // 1/3
+	th6 = th6 * 0.33f; // 1/3
+	th7 = th7 * 0.33f; // 1/3
+	th8 = th8 * 0.33f; // 1/3
+
+	/* Save safe duty cycle. */
+	th1_safe = th1;
+	th2_safe = th2;
+	th3_safe = th3;
+	th4_safe = th4;
+	th5_safe = th5;
+	th6_safe = th6;
+	th7_safe = th7;
+	th8_safe = th8;
 
 	/* Send thrust to ESC's. */
 	VESC_setDutyCycle(1, th1);
@@ -382,15 +387,16 @@ extern void Interface_transmitManualThrust(void){
  */
 extern void Interface_transmitThrustToMatlab(void){
 	/*** Send duty cycle to Matlab ***/
-	int8_t duty_array[8] = {(int8_t)(th1*33.3f),
-							(int8_t)(th2*33.3f),
-							(int8_t)(th3*33.3f),
-							(int8_t)(th4*33.3f),
-							(int8_t)(th5*33.3f),
-							(int8_t)(th6*33.3f),
-							(int8_t)(th7*33.3f),
-							(int8_t)(th8*33.3f)};
-	CAN_transmitBuffer(SENSOR_THRUSTER_DUTY, duty_array, 8, 0);
+	int8_t duty_array[8] = {(int8_t)(th1*100.0f),
+							(int8_t)(th2*100.0f),
+							(int8_t)(th3*100.0f),
+							(int8_t)(th4*100.0f),
+							(int8_t)(th5*100.0f),
+							(int8_t)(th6*100.0f),
+							(int8_t)(th7*100.0f),
+							(int8_t)(th8*100.0f)};
+
+	CAN_transmitBuffer(SENSOR_THRUSTER_DUTY_MAN, duty_array, 8, 0);
 }
 
 /**
@@ -505,36 +511,28 @@ extern int16_t Interface_getTotalDuty(void){
 		abs_thrust = abs(thrust[0]) + abs(thrust[1]) + abs(thrust[2]) + abs(thrust[3]) +
 				abs(thrust[4]) + abs(thrust[5]) + abs(thrust[6]) + abs(thrust[7]);
 		abs_thrust = abs_thrust/8;
-//		abs_thrust = (int16_t)(0.5*sqrtf(	(float)thrust[0]*thrust[0] +
-//													(float)thrust[1]*thrust[1] +
-//													(float)thrust[2]*thrust[2] +
-//													(float)thrust[3]*thrust[3] +
-//													(float)thrust[4]*thrust[4] +
-//													(float)thrust[5]*thrust[5] +
-//													(float)thrust[6]*thrust[6] +
-//													(float)thrust[7]*thrust[7]));
 	} else {
-		abs_thrust = (uint16_t)(300.0*(fabsf(th1) + fabsf(th2) + fabsf(th3) + fabsf(th4) +
-				fabsf(th5) + fabsf(th6) + fabsf(th7) + fabsf(th8)));
-		abs_thrust = abs_thrust/8;
-		printf("%d, %d, %d, %d, %d, %d, %d, %d, %d",
-				abs_thrust,
-				(int16_t)(th1*100.0f),
-				(int16_t)(th2*100.0f),
-				(int16_t)(th3*100.0f),
-				(int16_t)(th4*100.0f),
-				(int16_t)(th5*100.0f),
-				(int16_t)(th6*100.0f),
-				(int16_t)(th7*100.0f),
-				(int16_t)(th8*100.0f));
-//		abs_thrust = (int16_t)(0.5*sqrtf(3333.0*th1*th1 +
-//													3333.0*th2*th2 +
-//													3333.0*th3*th3 +
-//													3333.0*th4*th4 +
-//													3333.0*th5*th5 +
-//													3333.0*th6*th6 +
-//													3333.0*th7*th7 +
-//													3333.0*th8*th8));
+		float temp = 0.0f;
+		/* Sum absolute thruster values. */
+		if(th1>0.0f) temp += th1;
+		else temp -= th1;
+		if(th2>0.0f) temp += th2;
+		else temp -= th2;
+		if(th3>0.0f) temp += th3;
+		else temp -= th3;
+		if(th4>0.0f) temp += th4;
+		else temp -= th4;
+		if(th5>0.0f) temp += th5;
+		else temp -= th5;
+		if(th6>0.0f) temp += th6;
+		else temp -= th6;
+		if(th7>0.0f) temp += th7;
+		else temp -= th7;
+		if(th8>0.0f) temp += th8;
+		else temp -= th8;
+
+		abs_thrust = (temp*100.0f)/8;
+
 	}
 	return abs_thrust;
 }

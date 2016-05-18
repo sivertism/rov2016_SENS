@@ -12,8 +12,8 @@
 /* VESC interface. */
 #define NUMBER_OF_VESCS							9
 #define VESC_TEMPERATURE_ALARM_LIMIT			60u
-#define VESC_DUTY_CYCLE_MAX						0.94f
-#define VESC_DUTY_CYCLE_MIN						-0.94f
+#define VESC_DUTY_CYCLE_MAX						0.4f
+#define VESC_DUTY_CYCLE_MIN						-0.4f
 
 #define	ESC_ID_1								1
 #define	ESC_ID_2								2

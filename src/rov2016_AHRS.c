@@ -29,13 +29,13 @@ float delta_roll_acc=0.0f, delta_pitch_acc=0.0f;
 float delta_pitch_k=0.0f, delta_roll_k=0.0f;
 int32_t pitch_roll_buff[2] = {0};
 
-float weight_acc=0.0f; weight_acc_pitch=0.0f; weight_acc_roll=0.0f;
+float weight_acc=0.0f, weight_acc_pitch=0.0f, weight_acc_roll=0.0f;
 float gx_k=0.0f, gy_k=0.0f, gz_k=0.0f;
 float delta_pitch_gyro=0.0f, delta_roll_gyro=0.0f;
-float weight_gyro_pitch=0.0f; weight_gyro_roll=0.0f;
-float est_delta_pitch=0.0f; est_delta_roll=0.0f;
-float est_pitch_k=0.0f; est_pitch_k_1=0.0f;
-float est_roll_k=0.0f; est_roll_k_1=0.0f;
+float weight_gyro_pitch=0.0f, weight_gyro_roll=0.0f;
+float est_delta_pitch=0.0f, est_delta_roll=0.0f;
+float est_pitch_k=0.0f, est_pitch_k_1=0.0f;
+float est_roll_k=0.0f, est_roll_k_1=0.0f;
 
 
 float timestep = 0.1f; // Timestep = 0.1s.
@@ -235,8 +235,8 @@ extern int32_t AHRS_tilt_compensated_heading(int32_t pitch, int32_t roll, int32_
 extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz){
 	/* Accelerometer pitch, roll *******************************************************/
 	/* Calculate pitch, roll */
-	acc_pitch_k = ((float)AHRS_accelerometer_pitch(ax, ay, az))/100;
-	acc_roll_k = ((float)AHRS_accelerometer_roll(ay, az))/100;
+	acc_pitch_k = ((float)AHRS_accelerometer_pitch(ax, ay, az))/100.0f;
+	acc_roll_k = ((float)AHRS_accelerometer_roll(ay, az))/100.0f;
 
 	/* Calculate accelerometers delta_pitch, delta_roll */
 	delta_pitch_k = acc_pitch_k - acc_pitch_k_1;
@@ -298,6 +298,8 @@ extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t 
 
 	if(weight_gyro_pitch > 1.0f) weight_gyro_pitch = 1.0f;
 	if(weight_gyro_roll > 1.0f) weight_gyro_roll = 1.0f;
+
+	printf("a: %d, g: %d",(int16_t)(weight_acc_pitch*1000.0f), (int16_t)(weight_acc_roll*1000.0f));
 
 	/* Sensor fusion *******************************************************************/
 	est_delta_pitch = delta_pitch_acc * weight_acc_pitch;

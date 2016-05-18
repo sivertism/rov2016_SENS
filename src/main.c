@@ -103,9 +103,6 @@ int main(void){
 			gy = -gy;
 			gz = -temp3;
 
-			pitch = AHRS_accelerometer_pitch(ax, ay, az);
-			roll = AHRS_accelerometer_roll(ay, az);
-
 			attitude = AHRS_sensor_fusion(ax, ay, az, gx, gy, gz);
 
 			/* Send magnetometer, gyroscope and accelerometer data over CAN */
@@ -118,7 +115,7 @@ int main(void){
 			int16_t totThrust = Interface_getTotalDuty();
 			if(!flag_systick_update_heading){
 			CAN_transmitAHRS((int16_t)(-attitude[0]/10), (int16_t)(attitude[1]/10), totThrust, \
-				-pitch/10);
+				0);
 			}
 			flag_systick_update_attitude = 0;
 		}
@@ -159,12 +156,13 @@ int main(void){
 		}
 
 		/* Transmit duty cycle to thrusters. */
-		if (flag_systick_transmit_thrust && flag_systick_auto){
+		if (flag_systick_transmit_thrust && !flag_systick_auto){
 			int16_t* controller_vals = Interface_readController();
 			Interface_transmitManualThrust();
 			Interface_transmitThrustToMatlab();
 			flag_systick_transmit_thrust = 0;
 		}
+
 	} // end while
 } // end main
 
