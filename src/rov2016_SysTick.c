@@ -57,9 +57,8 @@ extern void SysTick_init(void) {
 } // end Systick_init()
 
 /**
- * @brief ****************************************************************
- * ***********************************************************************
- * ***********************************************************************
+ * @brief Systick handler functions as a state machine, setting flags at
+ * fixed intervals and at certain received CAN-messages.
  * @param  None
  * @retval None
  */
@@ -73,11 +72,6 @@ void SysTick_Handler(void){
 	/* Check for messages from topside and set LED's accordingly. */
 	if(CAN_getRxMessages()>0){
 		uint8_t buttons_1 = CAN_getByteFromMessage(fmi_topside_xbox_axes,4);
-
-		if(buttons_1 & 0x1) VESC_setDutyCycle(ESC_ID_9, 0.6f);
-		else if(buttons_1 & 0x2) VESC_setDutyCycle(ESC_ID_9, -0.6f);
-		else VESC_setDutyCycle(ESC_ID_9, 0);
-
 		GPIOE->ODR = (uint16_t)buttons_1 << 12;
 	}
 
@@ -89,6 +83,9 @@ void SysTick_Handler(void){
 	if(CAN_getByteFromMessage(fmi_topside_sens_ctrl, 1)){
 		flag_systick_zero_pressure = 1;
 	}
+
+	/* Man/auto. */
+	flag_systick_auto = CAN_getByteFromMessage(fmi_topside_reg_param, 6);
 
 	/* 10 Hz loop */
 	if((counter_10_hz>9)){

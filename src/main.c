@@ -28,10 +28,11 @@
 void init(void);
 
 /* PRIVATE VARIABLES ---------------------------------------------------------*/
-static int32_t mx=0.0f, my=0.0f, mz=0.0f;
+static int32_t mx=0, my=0, mz=0;
 static int16_t ax=0, ay=0, az=0;
 static int16_t gx=0, gy=0, gz=0;
-static int32_t heading = 0.0f, pitch=0.0f, roll=0.0f;
+static int32_t heading = 0, pitch=0, roll=0;
+static int32_t* attitude;
 static int32_t depth = 0;
 static uint16_t int_temp=0, DCDC_temp=0, manip_temp=0;
 
@@ -99,11 +100,10 @@ int main(void){
 
 			int16_t temp3 = gx;
 			gx = -gz;
-			gy = gy;
+			gy = -gy;
 			gz = -temp3;
 
-			pitch = AHRS_accelerometer_pitch(ax, ay, az);
-			roll = AHRS_accelerometer_roll(ay, az);
+			attitude = AHRS_sensor_fusion(ax, ay, az, gx, gy, gz);
 
 			/* Send magnetometer, gyroscope and accelerometer data over CAN */
 			uint8_t acc_array[6] = {(uint8_t)(ax >> 8), (uint8_t)(ax & 0xFF),
@@ -112,20 +112,20 @@ int main(void){
 			CAN_transmitAcceleration(acc_array);
 			CAN_transmitMag(mx, my, mz);
 			CAN_transmitGyro(gx, gy, gz);
-
+			int16_t totThrust = Interface_getTotalDuty();
 			if(!flag_systick_update_heading){
-			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
-				(uint16_t)(heading/10));
+			CAN_transmitAHRS((int16_t)(-attitude[0]/10), (int16_t)(attitude[1]/10), totThrust, \
+				0);
 			}
 			flag_systick_update_attitude = 0;
 		}
 
 		/* Calculate heading and transmit pitch, roll, heading to topside. */
 		if(flag_systick_update_heading){
-			heading = AHRS_tilt_compensated_heading(pitch, roll, mx, my, mz);
+			heading = AHRS_tilt_compensated_heading(attitude[0], attitude[1], mx, my, mz);
 
-			CAN_transmitAHRS((int16_t)(-pitch/10), (int16_t)(roll/10), 0, \
-				(uint16_t)(heading/10));
+		//	CAN_transmitAHRS((int16_t)(-attitude[0]/10), (int16_t)(attitude[1]/10), 0, \
+		//		(uint16_t)(heading/10));
 			flag_systick_update_heading = 0;
 		}
 
@@ -151,17 +151,18 @@ int main(void){
 			DCDC_temp = ADC_getTemperature(TEMP_DCDC);
 			int_temp = ADC_getTemperature(TEMP_INT);
 			manip_temp = ADC_getTemperature(TEMP_MANIP);
-
 			CAN_transmitTemp(int_temp, manip_temp, DCDC_temp);
 			flag_systick_update_temp = 0;
 		}
 
 		/* Transmit duty cycle to thrusters. */
-		if (flag_systick_transmit_thrust){
+		if (flag_systick_transmit_thrust && !flag_systick_auto){
 			int16_t* controller_vals = Interface_readController();
-			if(!CAN_getByteFromMessage(fmi_topside_reg_param, 6)) Interface_transmitManualThrust();
+			Interface_transmitManualThrust();
+			Interface_transmitThrustToMatlab();
 			flag_systick_transmit_thrust = 0;
 		}
+
 	} // end while
 } // end main
 

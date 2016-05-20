@@ -14,6 +14,7 @@
 #include "stm32f30x.h"
 #include <math.h>
 #include <stdint.h>
+#include "rov2016_uart.h"
 
 /* Global variables --------------------------------------------------------------------*/
 #include "extern_decl_global_vars.h"
@@ -22,6 +23,27 @@
 //float magnetometer_heading(int16_t mx, int16_t my, int16_t mz);
 
 /* Private variables -------------------------------------------------------------------*/
+/* Sensor fusion*/
+float acc_pitch_k_1=0.0f, acc_roll_k_1=0.0f, acc_pitch_k=0.0f, acc_roll_k=0.0f;
+float delta_roll_acc=0.0f, delta_pitch_acc=0.0f;
+float delta_pitch_k=0.0f, delta_roll_k=0.0f;
+int32_t pitch_roll_buff[2] = {0};
+
+float weight_acc=0.0f, weight_acc_pitch=0.0f, weight_acc_roll=0.0f;
+float gx_k=0.0f, gy_k=0.0f, gz_k=0.0f;
+float delta_pitch_gyro=0.0f, delta_roll_gyro=0.0f;
+float weight_gyro_pitch=0.0f, weight_gyro_roll=0.0f;
+float est_delta_pitch=0.0f, est_delta_roll=0.0f;
+float est_pitch_k=0.0f, est_pitch_k_1=0.0f;
+float est_roll_k=0.0f, est_roll_k_1=0.0f;
+
+
+float timestep = 0.1f; // Timestep = 0.1s.
+float gain_pitch_gyro = 0.25f; // 1/4
+float gain_roll_gyro = 0.11; // 1/9
+
+
+/* Heading calc. */
 typedef enum{
 	QUADRANT_1, 		// X>0, Y>0
 	QUADRANT_2,			// X<0, Y>0
@@ -93,7 +115,7 @@ float AHRS_magnetometer_heading(float mx, float my, float mz){
 /**
  * @brief  	Calculates pitch based on 3D accelerometer data.
  * @param  	int16_t ax, ay, az accelerometerdata in 3D.
- * @retval 	Pitch value in degrees.
+ * @retval 	Pitch value in degrees*100.
  */
 
 extern int32_t AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
@@ -112,7 +134,7 @@ extern int32_t AHRS_accelerometer_pitch(int16_t ax, int16_t ay, int16_t az){
 /**
  * @brief  	Calculates roll based on 3D accelerometer data.
  * @param  	int16_t ay, az accelerometerdata in 3D.
- * @retval 	Roll value in degrees.
+ * @retval 	Roll value in degrees*100.
  */
 
 extern int32_t AHRS_accelerometer_roll(int16_t ay, int16_t az){
@@ -154,7 +176,7 @@ extern int32_t AHRS_tilt_compensated_heading(int32_t pitch, int32_t roll, int32_
 	float mx_2, my_2;
 	mx_2 = mx_norm*cospitch + mz_norm*sinpitch;
 	my_2 = mx_norm*sinroll*sinpitch + my_norm*cosroll - mz_norm*sinroll*cospitch;
-//	mz_2 = -mx_norm*cosroll*sinpitch + my_norm*sinroll + mz_norm*cosroll*cospitch;
+	//	mz_2 = -mx_norm*cosroll*sinpitch + my_norm*sinroll + mz_norm*cosroll*cospitch;
 
 	/* Find quadrant. */
 	quadrant quad = QUADRANT_1;
@@ -203,85 +225,100 @@ extern int32_t AHRS_tilt_compensated_heading(int32_t pitch, int32_t roll, int32_
 	return (int32_t)(heading*100.0f);
 }
 
-extern float MCD_APP_TEAM_AHRS(float ax, float ay, float az, float mx, float my, float mz, float gx, float gy, float gz){
+/**
+ * @brief  	Calculates estimates for pitch and roll angles
+ * @param  	int16_t ax, ay, az: Acceleration in 10^-3 g.
+ * @param	int16_t gx, gy, gz: Angular velocity in 8.75 mdps per LSb.
+ * @param 	int16_t abs_thrust: Number proportional to the total thruster duty cycle.
+ * @retval 	Roll value in degrees*100.
+ */
+extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t gx, int16_t gy, int16_t gz){
+	/* Accelerometer pitch, roll *******************************************************/
+	/* Calculate pitch, roll */
+	acc_pitch_k = ((float)AHRS_accelerometer_pitch(ax, ay, az))/100.0f;
+	acc_roll_k = ((float)AHRS_accelerometer_roll(ay, az))/100.0f;
 
-	float fNormAcc,fSinRoll,fCosRoll,fSinPitch,fCosPitch = 0.0f, RollAng = 0.0f, PitchAng = 0.0f;
-	float fTiltedX,fTiltedY = 0.0f;
-	volatile float HeadingValue = 0.0f;
+	/* Calculate accelerometers delta_pitch, delta_roll */
+	delta_pitch_k = acc_pitch_k - acc_pitch_k_1;
+	delta_roll_k = acc_roll_k - acc_roll_k_1;
+	acc_pitch_k_1 = acc_pitch_k;
+	acc_roll_k_1 = acc_roll_k;
 
-	ax = ax/100.0;
-	ay = ay/100.0;
-	az = az/100.0;
-    fNormAcc = sqrt((ax*ax)+(ay*ay)+(ay*ay));
+	/* Calculate accelerometer weight -------------------------------------------------*/
+	/* Thruster compensation*/
+	float tot_thrust = (float)Interface_getTotalDuty()*0.01f;
+	if(tot_thrust < 0.25f){
+		weight_acc = 1.0f - 3.0f*tot_thrust;
+	} else {
+		weight_acc = 1.0f - 0.75f;
+	}
 
-    fSinRoll = -ay/fNormAcc;
-    fCosRoll = sqrt(1.0-(fSinRoll * fSinRoll));
-    fSinPitch = ax/fNormAcc;
-    fCosPitch = sqrt(1.0-(fSinPitch * fSinPitch));
-   if ( fSinRoll >0)
-   {
-     if (fCosRoll>0)
-     {
-       RollAng = acos(fCosRoll)*180/PI;
-     }
-     else
-     {
-       RollAng = acos(fCosRoll)*180/PI + 180;
-     }
-   }
-   else
-   {
-     if (fCosRoll>0)
-     {
-       RollAng = acos(fCosRoll)*180/PI + 360;
-     }
-     else
-     {
-       RollAng = acos(fCosRoll)*180/PI + 180;
-     }
-   }
+	/* lowpass */
+	if(delta_pitch_k > 1.0f){
+		weight_acc_pitch = weight_acc/delta_pitch_k;
+	} else if (delta_pitch_k < -1.0f) {
+		weight_acc_pitch = - weight_acc/delta_pitch_k;
+	} else{
+		weight_acc_pitch = weight_acc;
+	}
 
-    if ( fSinPitch >0)
-   {
-     if (fCosPitch>0)
-     {
-          PitchAng = acos(fCosPitch)*180/PI;
-     }
-     else
-     {
-        PitchAng = acos(fCosPitch)*180/PI + 180;
-     }
-   }
-   else
-   {
-     if (fCosPitch>0)
-     {
-          PitchAng = acos(fCosPitch)*180/PI + 360;
-     }
-     else
-     {
-        PitchAng = acos(fCosPitch)*180/PI + 180;
-     }
-   }
+	if(delta_roll_k > 1.0f){
+		weight_acc_roll = weight_acc/delta_roll_k;
+	} else if (delta_roll_k < -1.0f) {
+		weight_acc_roll = - weight_acc/delta_roll_k;
+	} else{
+		weight_acc_roll = weight_acc;
+	}
 
-    if (RollAng >=360)
-    {
-      RollAng = RollAng - 360;
-    }
+	delta_pitch_acc = acc_pitch_k - est_pitch_k_1;
+	delta_roll_acc = acc_roll_k - est_roll_k_1;
 
-    if (PitchAng >=360)
-    {
-      PitchAng = PitchAng - 360;
-    }
+	/* Gyroscope estimates *************************************************************/
+	/* Digital -> dps */
+	gx_k = ((float)gx)*0.00875f;
+	gy_k = ((float)gy)*0.00875f;
+	gz_k = ((float)gz)*0.00875f;
 
-    fTiltedX = mx*fCosPitch+mz*fSinPitch;
-    fTiltedY = mx*fSinRoll*fSinPitch+my*fCosRoll-my*fSinRoll*fCosPitch;
+	/* Calc delta pitch,roll */
+	delta_pitch_gyro = timestep * gy_k;
+	delta_roll_gyro = timestep * gx_k;
 
-    HeadingValue = (float) ((atan2f((float)fTiltedY,(float)fTiltedX))*180)/PI;
+	/* Gyroscope weights. -------------------------------------------------------------*/
+	if (gy_k > 0){
+		weight_gyro_pitch = gain_pitch_gyro * gy_k;
+	} else{
+		weight_gyro_pitch = - gain_pitch_gyro * gy_k;
+	}
 
-    if (HeadingValue < 0)
-    {
-      HeadingValue = HeadingValue + 360;
-    }
-    return HeadingValue;
+	if (gx_k > 0){
+		weight_gyro_roll = gain_roll_gyro * gx_k;
+	} else{
+		weight_gyro_roll = - gain_roll_gyro * gx_k;
+	}
+
+	if(weight_gyro_pitch > 1.0f) weight_gyro_pitch = 1.0f;
+	if(weight_gyro_roll > 1.0f) weight_gyro_roll = 1.0f;
+
+	printf("a: %d, g: %d",(int16_t)(weight_acc_pitch*1000.0f), (int16_t)(weight_acc_roll*1000.0f));
+
+	/* Sensor fusion *******************************************************************/
+	est_delta_pitch = delta_pitch_acc * weight_acc_pitch;
+	est_delta_pitch += delta_pitch_gyro * weight_gyro_pitch;
+	est_delta_pitch /= (weight_acc_pitch + weight_gyro_pitch);
+
+	est_delta_roll = delta_roll_acc * weight_acc_roll;
+	est_delta_roll += delta_roll_gyro * weight_gyro_roll;
+	est_delta_roll /= (weight_acc_roll + weight_gyro_roll);
+
+	est_pitch_k = est_pitch_k_1 + est_delta_pitch;
+	est_roll_k = est_roll_k_1 + est_delta_roll;
+
+	est_pitch_k_1 = est_pitch_k;
+	est_roll_k_1 = est_roll_k;
+
+	/* Return estimated pitch and roll */
+	pitch_roll_buff[0] = (int32_t)(est_pitch_k*100.0f);
+	pitch_roll_buff[1] = (int32_t)(est_roll_k*100.0f);
+
+	return pitch_roll_buff;
 }
