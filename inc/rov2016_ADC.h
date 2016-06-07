@@ -20,10 +20,11 @@
 #define TEMP_DCDC																ADC_CHANNEL_AN_IN2
 #define TEMP_MANIP																ADC_CHANNEL_AN_IN1
 #define TEMP_INT																ADC_CHANNEL_INT_TEMP
-
+#define LEAK_DETECTOR															ADC_CHANNEL_LEAKAGE
 
 /* Extern function prototypes ----------------------------------------------------------*/
 extern void ADC_init(void);
 extern uint8_t ADC_getValues(void);
 extern uint16_t ADC_getChannel(uint8_t channel);
 extern uint16_t ADC_getTemperature(uint8_t sensor_input);
+extern uint16_t ADC_getLeakStatus(void);

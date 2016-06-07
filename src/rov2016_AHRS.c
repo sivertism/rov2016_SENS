@@ -299,8 +299,6 @@ extern int32_t * AHRS_sensor_fusion(int16_t ax, int16_t ay, int16_t az, int16_t 
 	if(weight_gyro_pitch > 1.0f) weight_gyro_pitch = 1.0f;
 	if(weight_gyro_roll > 1.0f) weight_gyro_roll = 1.0f;
 
-	printf("a: %d, g: %d",(int16_t)(weight_acc_pitch*1000.0f), (int16_t)(weight_acc_roll*1000.0f));
-
 	/* Sensor fusion *******************************************************************/
 	est_delta_pitch = delta_pitch_acc * weight_acc_pitch;
 	est_delta_pitch += delta_pitch_gyro * weight_gyro_pitch;

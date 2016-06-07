@@ -2,7 +2,8 @@
 volatile uint8_t fmi_topside_xbox_ctrl = 0;
 volatile uint8_t fmi_topside_xbox_axes = 0;
 volatile uint8_t fmi_topside_sens_ctrl = 0;
-volatile uint8_t fmi_topside_reg_param = 0;
+volatile uint8_t fmi_topside_reg_param1 = 0;
+volatile uint8_t fmi_topside_reg_param2 = 0;
 volatile uint8_t fmi_auto_thrust = 0;
 
 /* Global software flags */
@@ -15,12 +16,16 @@ volatile uint8_t flag_systick_calibrate_gyro = 0;
 volatile uint8_t flag_systick_update_temp = 0;
 volatile uint8_t flag_systick_zero_pressure = 0;
 volatile uint8_t flag_systick_auto = 0;
+volatile uint8_t flag_systick_update_leak = 0;
 
-
-/* Choice of axis in accelerometer_data */
-const uint8_t ACC_AXIS_X				= 0;
-const uint8_t ACC_AXIS_Y				= 1;
-const uint8_t ACC_AXIS_Z				= 2;
+/* Regulator parameters*/
+volatile int32_t Kp_t = 0;
+volatile int32_t Ti_t = 0;
+volatile int32_t Td_t = 0;
+volatile int32_t Kp_r = 0;
+volatile int32_t Ti_r = 0;
+volatile int32_t Td_r = 0;
+volatile uint16_t Ts  = 100;
 
 /* Status LED's */
 const uint8_t MAIN_LOOP_LED				= (1u << 0);
@@ -33,3 +38,5 @@ const uint8_t STATUS_LED6				= (1u << 6);
 const uint8_t STATUS_LED7				= (1u << 7);
 
 uint8_t accelerometer_data[6] = {0};
+int32_t depth = 0;
+int32_t* attitude = {0};

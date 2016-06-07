@@ -45,6 +45,9 @@ extern void CAN_transmitMag(uint16_t mx, uint16_t my, uint16_t mz);
 extern void CAN_transmitGyro(uint16_t gx, uint16_t gy, uint16_t gz);
 extern void Interface_transmitThrustToMatlab(void);
 
+/* Automatic control functions */
+extern void Interface_readRegparam(void);
+extern void Interface_SendSetPoint(int16_t depth, int16_t roll, int16_t pitch);
 
 /* VESC interface */
 extern void VESC_setDutyCycle(uint8_t esc_id, float duty);

@@ -85,7 +85,7 @@ void SysTick_Handler(void){
 	}
 
 	/* Man/auto. */
-	flag_systick_auto = CAN_getByteFromMessage(fmi_topside_reg_param, 6);
+	flag_systick_auto = CAN_getByteFromMessage(fmi_topside_reg_param1, 6);
 
 	/* 10 Hz loop */
 	if((counter_10_hz>9)){
@@ -94,6 +94,7 @@ void SysTick_Handler(void){
 		flag_systick_transmit_thrust = 1;
 		flag_systick_update_depth = 1;
 		flag_systick_update_temp = 1;
+		flag_systick_update_leak = 1;
 		
 		/* Check for USART messages, start if 'k' */
 		if (USART_getNewBytes()>0){

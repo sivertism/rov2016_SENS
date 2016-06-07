@@ -24,6 +24,7 @@ int16_t controller_data[7] = {0};
 
 /* Private variables -------------------------------------------------------------------*/
 static uint8_t dataBuffer[8] = {0};
+static int16_t reg_param[7] = {0};
 static uint8_t counter_alive = 0;
 static uint8_t temperature_check_counter = 1;
 static uint8_t rpm_check_counter = 1;
@@ -170,6 +171,57 @@ extern void CAN_transmitGyro(uint16_t gx, uint16_t gy, uint16_t gz){
 	CAN_transmitBuffer(SENSOR_ANGULAR_VELOCITY, dataBuffer, 6, CAN_ID_STD);
 }
 
+
+
+extern void Interface_SendSetPoint(int16_t depth, int16_t roll, int16_t pitch){
+	dataBuffer[0] = (uint8_t)(depth >> 8u);
+	dataBuffer[1] = (uint8_t)(depth & 0xFF);
+	dataBuffer[2] = (uint8_t)(roll >> 8u);
+	dataBuffer[3] = (uint8_t)(roll & 0xFF);
+	dataBuffer[4] = (uint8_t)(pitch >> 8u);
+	dataBuffer[5] = (uint8_t)(pitch & 0xFF);
+	CAN_transmitBuffer(SENSOR_REG_SETPOINT, dataBuffer, 6, CAN_ID_TYPE_STD);
+}
+
+/**
+ * @brief	Read regulator parameters over CAN from topside
+ * 		0. P trans
+ * 		1. I trans
+ * 		2. D trans
+ * 		3. P rot
+ * 		4. I rot
+ * 		5. D rot
+ * 		6. Regulator: 0 = off, else on
+ *
+ * 	@retval int16_t array containing regulator data
+ */
+extern void Interface_readRegparam(void){
+
+	/* Read topside regulator parameters*/
+	uint8_t* param_package1 = CAN_getMessagePointer(fmi_topside_reg_param1);
+	uint8_t* param_package2 = CAN_getMessagePointer(fmi_topside_reg_param2);
+
+	/*regulator parameters translation:  P [0] I [1] D [2]}*/
+	reg_param[0] = (int16_t) (( (uint16_t)param_package1[1] << 8) | param_package1[0]);
+	reg_param[1] = (int16_t) (( (uint16_t)param_package1[3] << 8) | param_package1[2]);
+	reg_param[2] = (int16_t) (( (uint16_t)param_package1[5] << 8) | param_package1[4]);
+
+	/*regulator parameters rotation:  P [3] I [4] D [5]}*/
+	reg_param[3] = (int16_t) (( (uint16_t)param_package2[1] << 8) | param_package2[0]);
+	reg_param[4] = (int16_t) (( (uint16_t)param_package2[3] << 8) | param_package2[2]);
+	reg_param[5] = (int16_t) (( (uint16_t)param_package2[5] << 8) | param_package2[4]);
+
+	//if(reg_param[0] == 0) return;
+	Kp_t = (int32_t)reg_param[0];
+	Ti_t = (int32_t)reg_param[1];
+	Td_t = (int32_t)reg_param[2];
+	Kp_r = (int32_t)reg_param[3];
+	Ti_r = (int32_t)reg_param[4];
+	Td_r = (int32_t)reg_param[5];
+}
+
+
+
 /**
  * @brief  	Sets the duty cycle of the specified VESC BLDC controller.
  * @param  	esc_id:	Can be a value of ESC_ID_x where x can be 1-12.
@@ -218,8 +270,6 @@ extern int16_t* Interface_readController(void){
 	/* Read messages from CAN receive buffer */
 	uint8_t* controller_package1 = CAN_getMessagePointer(fmi_topside_xbox_ctrl);
 	uint8_t* controller_package2 = CAN_getMessagePointer(fmi_topside_xbox_axes);
-
-
 
 	/* Left trigger */
 	controller_data[0] = (int16_t)( (int16_t)controller_package1[5] << 8 ) | controller_package1[4];
@@ -317,7 +367,7 @@ extern void Interface_transmitManualThrust(void){
 	th7 -= surgethrust;
 	th8 -= surgethrust;
 
-	float yawthrust = (float)controller_data[6]/1000.0f;
+	float yawthrust = ((float)controller_data[6]/1000.0f)/2;
 	th5 -= yawthrust;
 	th6 -= yawthrust;
 	th7 += yawthrust;
