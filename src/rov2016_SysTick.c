@@ -66,8 +66,8 @@ void SysTick_Handler(void){
 	counter_10_hz++;
 	counter_1_hz++;
 
-	Interface_VESC_requestRPM();
-	Interface_VESC_requestCurrent();
+//	Interface_VESC_requestRPM();
+//	Interface_VESC_requestCurrent();
 
 	/* Check for messages from topside and set LED's accordingly. */
 	if(CAN_getRxMessages()>0){

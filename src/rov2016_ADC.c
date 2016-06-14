@@ -341,7 +341,6 @@ uint16_t ADC_getChannel(uint8_t channel){
 	return (30000*ADC_buffer[channel])/4096;
 }
 
-
 /**
  * @brief  	Returns the temperature of the selected temperature sensor.
  * @param	Choice of temperature sensor.
@@ -360,6 +359,6 @@ extern uint16_t ADC_getTemperature(uint8_t sensor_input){
  * @retval 	The voltage of the leak detector circuit in millivolt.
  */
 extern uint16_t ADC_getLeakStatus(void){
-	uint16_t temp = (3000*ADC_buffer[LEAK_DETECTOR])/4096;
+	uint16_t temp = (30000*ADC_buffer[LEAK_DETECTOR])/4096;
 	return temp;
 }
