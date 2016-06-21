@@ -113,7 +113,7 @@ void SysTick_Handler(void){
 	/* 1 Hz loop */
 	if(counter_1_hz>99){
 		flag_systick_update_ms5803_temp = 1;
-		Interface_VESC_request_temp_volt();
+//		Interface_VESC_request_temp_volt();
 		flag_systick_update_heading = 1;
 
 		CAN_transmitAlive();

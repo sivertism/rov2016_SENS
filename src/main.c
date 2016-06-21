@@ -136,7 +136,7 @@ int main(void){
 		if (flag_systick_update_depth){
 			MS5803_updateDigital(MS5803_CONVERT_PRESSURE);
 			current_pressure = MS5803_getPressure();
-			depth = ((current_pressure - surface_pressure)*10000)/((int32_t)(RHO_POOL*G_STAVANGER));
+			depth = ((current_pressure - surface_pressure)*10000)/((int32_t)(RHO_POOL*G_HOUSTON));
 			if(depth < 0) depth = 0;
 			uint16_t pressure_temp = (uint16_t) MS5803_getTemperature();
 

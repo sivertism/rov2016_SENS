@@ -111,7 +111,7 @@ extern void regulateThrusters(){
 		//printf("Roll setpoint: %d", controller_data[XBOX_CTRL_ROLL]/2);
 		/*Update manual gain*/
 		if (controller_data[XBOX_CTRL_ROLL] != 0){
-			setPReg[AXIS_ROLL] = -(controller_data[XBOX_CTRL_ROLL]/2);
+			setPReg[AXIS_ROLL] = -(controller_data[XBOX_CTRL_ROLL]);
 			Rflag = 1;
 		}else{
 			if (Rflag > 0){
@@ -120,9 +120,9 @@ extern void regulateThrusters(){
 			}
 		}
 
-		/*Update manual gain*/
+		/*Update additional manual gain*/
 		if (controller_data[XBOX_CTRL_PITCH] != 0){
-			setPReg[AXIS_PITCH] = -(controller_data[XBOX_CTRL_PITCH]/2);
+			setPReg[AXIS_PITCH] = -(controller_data[XBOX_CTRL_PITCH]);
 			Pflag = 1;
 		}else{
 			if (Pflag > 0){
@@ -131,7 +131,7 @@ extern void regulateThrusters(){
 			}
 		}
 
-		/*Update manual gain*/
+		/*Update additional manual gain*/
 		if (controller_data[XBOX_CTRL_HEAVE] != 0){
 			setPReg[AXIS_HEAVE] = SensDat[AXIS_HEAVE] - (controller_data[XBOX_CTRL_HEAVE]);
 			Hflag = 1;
@@ -149,7 +149,10 @@ extern void regulateThrusters(){
 
 		/*Regulate Thruster values*/
 		CalcThrust();
-	} else {
+
+
+	} // end autoreg
+	else {
 		setPReg[AXIS_HEAVE] = SensDat[AXIS_HEAVE];
 	}
 
@@ -221,7 +224,6 @@ extern void CalcThrust(){
 	// 4: Update values in PP
 	// mP(6x1) = ABR(8*6) * KP(6x1);
 	matrix_multiply(&ABR[0][0],Kp, uP, 8, 6, 6, 1);
-
 
 	//addAndScale;
 	for (i=0; i<8; i++){
